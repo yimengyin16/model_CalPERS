@@ -1,0 +1,57 @@
+---
+title: "Notes"
+author: "Yimeng Yin"
+date: "6/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Convention for notations and abbreviations 
+
+**Labels for groups**
+
+ - Employement types:
+   - `misc`: state misc
+   - `inds`: state industrial
+   - `sfty`: safety
+   - `poff`: POFF
+   - `chp` : CHP
+   
+ - Classic or PEPRA 
+   - `classic`: classic members
+   - `pepra`: PEPRA members
+   
+ - Tiers
+   - `t1`: tier 1
+   - `t2`: tier 2
+   
+ - Naming groups
+   - `TPYE_PEPRA_TIER_OTHER...`   
+
+**Labels for member types**
+
+ - `servRet`: service retirement
+ - `defrRet`: deferred retirement
+ - `disbRet`: disability retirement
+ - `death`  : Death benefit   
+
+
+**Notes on "tidy" data format**
+
+- row indices
+     - `group`: eg. misc_classic_t1, inds_pepra_t2 
+     - `ea`   : entry age
+     - `age`  : attained age
+     - `yos`  : year of service
+     - `year`, `year_start`: starting year (for generational decrements, eg mortality with improvements)
+- column indices: variable names, gender suffix allowed (`_male`, `_female`)
+             
+     
+
+     
+
