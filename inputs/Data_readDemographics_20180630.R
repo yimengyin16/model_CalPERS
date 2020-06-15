@@ -103,8 +103,8 @@ df_nactives_raw <-
   bind_rows
 
 # extract age and yos cuts
-agecuts_actives <- get_agecuts(df_nactives)
-yoscuts_actives <- get_yoscuts(df_nactives)
+agecuts_actives <- get_agecuts(df_nactives_raw)
+yoscuts_actives <- get_yoscuts(df_nactives_raw)
 
 
 #*******************************************************************************
@@ -169,7 +169,7 @@ save(
   
   agecuts_retirees,
 		 
-	file = paste0(dir_dataOut, "Data_CalPERS_demographics_20180331_raw.RData")
+	file = paste0(dir_dataOut, "Data_CalPERS_demographics_20180630_raw.RData")
 )
 
 

@@ -10,10 +10,15 @@
  
 
 
+
+
+
+
+
 #*******************************************************************************
 #                      ## Tools ####
 #*******************************************************************************
-source("libraries.R")
+# source("libraries.R")
 
 
 
@@ -30,9 +35,6 @@ dir_dataOut <- "Inputs/data_proc/"
 
 
 names_sheet <- excel_sheets(filePath_dataRaw)
-
-
-
 
 
 
@@ -153,7 +155,7 @@ df_qxt.vest_raw <-
     
     read_excel_range(filePath_dataRaw, "defrRet_vest_inds")$df %>%
       gather(ea, qxt.vest,-yos, convert = TRUE) %>%
-      mutate(grp = ".nds",
+      mutate(grp = "inds",
              qxt.vest = as.numeric(qxt.vest)) %>%
       relocate(grp),
     

@@ -8,11 +8,11 @@ library(gdata) # read.xls
 library(zoo)
 library(readxl)
 library(stringr)
-library("readxl")
-library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
+library(readxl)
+# library(XLConnect) # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
 library(magrittr)    # use %<>%   
 library(scales)
-# library(xlsx)
+# library(xlsx) # writing xlsx files
 # library("btools")
 
 # parallel computing
@@ -65,7 +65,7 @@ source("Functions.R")
 
 
 #*******************************************************************************
-#          Tools          #  
+#                                  Local Tools          #  
 #*******************************************************************************
 
 
@@ -92,7 +92,6 @@ read_excel_range <- function(fileName, sheetName, Range = "a2:b4" ){
   
   list(df      = df,
        tblInfo = tblInfo)
-  
 }
 
 
