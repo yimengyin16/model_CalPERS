@@ -429,6 +429,29 @@ summary {
 <li>column indices: variable names, gender suffix allowed (<code>_male</code>, <code>_female</code>)</li>
 </ul>
 </div>
+<div id="constructing-standard-tier-inputs" class="section level1">
+<h1>Constructing standard tier inputs</h1>
+<p>A basic set of inputs for modeling a tier includes the following components</p>
+<ul>
+<li>decrement table, adjusted for modeling needs (e.g. benefit rules)</li>
+<li>salary schedule</li>
+<li>initial demographics, at least including
+<ul>
+<li>actives: number and salary</li>
+<li>retirees (service and disability): number and benefit</li>
+</ul></li>
+</ul>
+<p>Assumptions on ea must be applied to retirees</p>
+<p>Other model inputs generated from tier data above:</p>
+<ul>
+<li>complete schedule of salary: current, past, and future years</li>
+<li>age distribution of new members</li>
+</ul>
+<p>Other model components that need to be adapted to tier features:</p>
+<ul>
+<li>function for individual liability (IndivLiab)</li>
+</ul>
+</div>
 
 
 

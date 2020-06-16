@@ -51,6 +51,31 @@ knitr::opts_chunk$set(echo = TRUE)
      - `year`, `year_start`: starting year (for generational decrements, eg mortality with improvements)
 - column indices: variable names, gender suffix allowed (`_male`, `_female`)
              
+
+# Constructing standard tier inputs
+
+A basic set of inputs for modeling a tier includes the following components
+
+ - decrement table, adjusted for modeling needs (e.g. benefit rules)
+ - salary schedule
+ - initial demographics, at least including 
+   - actives: number and salary 
+   - retirees (service and disability): number and benefit
+
+Assumptions on ea must be applied to retirees
+
+Other model inputs generated from tier data above:
+
+ - complete schedule of salary: current, past, and future years
+ - age distribution of new members
+
+Other model components that need to be adapted to tier features:
+
+ - function for individual liability (IndivLiab)
+
+
+
+
      
 
      

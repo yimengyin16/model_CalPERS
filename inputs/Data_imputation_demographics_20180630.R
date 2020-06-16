@@ -16,14 +16,16 @@
 
 # Outputs:
 #    -  imputed member data in tidy format
-
+#    - df_n_servRet_fillin
+#    - df_n_disbRet_occ_fillin
+#    - df_n_disbRet_nonocc_fillin
+#    - df_n_beneficiaries_fillin
 
 
 
 #*******************************************************************************
 #                      ## Global settings  ####
 #*******************************************************************************
-
 dir_data  <- "inputs/data_proc/"
 
 
@@ -37,7 +39,7 @@ load(paste0(dir_data, "Data_CalPERS_demographics_20180630_raw.RData"))
 
 
 #*******************************************************************************
-#                      ##  Exploring spreading the cells    ####
+#              ## Local tools   ####
 #*******************************************************************************
 
 # Interpolation of actives
@@ -61,6 +63,8 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
 	maxyos <- max(yoscuts$yosub)
 	
 	planname <- paste0(adf$planname[1])
+	
+	AV_date <- adf$AV_date[1]
 	
 	# adf %>% select(age, ea, salary) %>% spread(ea, salary)
 	# adf %>% select(age, ea, nactives) %>% spread(ea, nactives)
@@ -167,6 +171,7 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
 		mutate(salary.spline.adjep=spline.y2(age, salary.agecell, salary.cell)) %>% # Yimeng's 2nd step with endpoint adjustment
 		group_by(age.cell, yos.cell) %>%
 		mutate(planname=planname,
+		       AV_date = AV_date,
 					 pay.unadj=sum(salary.spline.adjep * nactives),
 					 adjust=pay.cell / pay.unadj,
 					 salary.final=salary.spline.adjep * adjust,
@@ -199,14 +204,24 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
 
 
 # Interpolation of retirees
-fillin.retirees <- function(list_data) {
+fillin.retirees.splineage <- function(list_data) {
 	
-	rdf <- select(list_data$data, planname, age, N, V) # keep only the vars we want
+  # list_data <- lretirees
+  
+	rdf     <- select(list_data$data, planname, age, N, V) # keep only the vars we want
 	agecuts <- list_data$agecuts
 	
-	planname <- paste0(rdf$planname[1], "_fillin")
-	name_N <- list_data$varNames["name_N"]
-	name_V <- list_data$varNames["name_V"]
+	planname <- paste0(rdf$planname[1], "")
+	# name_N <- list_data$varNames["name_N"]
+	# name_V <- list_data$varNames["name_V"]
+	
+	AV_date <- list_data$data$AV_date[1]
+	
+	name_N <- list_data$varNames$name_N
+	name_V <- list_data$varNames$name_V
+	
+	
+	
 	
 	# add group ranges to the retirees data frame
 	combo <- rdf %>%
@@ -217,7 +232,7 @@ fillin.retirees <- function(list_data) {
 		arrange(age)
 	
 	# get avg benefits by age, via spline
-	avgben <- splong(select(combo, age, V), "age", min(combo$age.lb):max(combo$age.ub))
+	avgben <- splong(select(combo, age, V) %>% as.data.frame, "age", min(combo$age.lb):max(combo$age.ub))
 	# force benefit to be non-negative DJB added 10/30/2015
 	avgben <- avgben %>% mutate(V=ifelse(V<0, 0, V))
 	
@@ -238,8 +253,11 @@ fillin.retirees <- function(list_data) {
 					 V=adjV*adjust,
 					 totben=N * V)
 	
-	rdf.fillin <- guessdf2 %>% mutate(planname=planname) %>%
-		select(planname, age.cell, age, N, V) %>%
+	rdf.fillin <- guessdf2 %>% 
+	  mutate(AV_date = AV_date,
+	         planname = planname) %>%
+	  mutate(across(all_of(c("N", "V")), na2zero)) %>% 
+		select(AV_date, planname, age.cell, age, N, V) %>%
 		ungroup
 	#plyr::rename(c("N" = list_data$varNames["name_N"])))
 	
@@ -255,10 +273,6 @@ fillin.retirees <- function(list_data) {
   #   - age.cell
   #   - agelb
   #   - ageub
-  # $yoscuts:
-  #   - yos.cell
-  #   - yoslb
-  #   - yosub
   # $data
   #   - age.cell
   #   - age
@@ -270,11 +284,14 @@ fillin.retirees <- function(list_data) {
   #   - name_V  
 
 
-get_agecuts <- function(df){
-	df %>% 
-		mutate(age.cell = (age_lb + age_ub)/ 2) %>% 
-		select(age.cell, agelb = age_lb, ageub = age_ub) 
-}
+# get_agecuts <- function(df){
+# 	df %>% 
+# 		mutate(age.cell = (age_lb + age_ub)/ 2) %>% 
+# 		select(age.cell, agelb = age_lb, ageub = age_ub) 
+# }
+
+
+
 
 
 #*******************************************************************************
@@ -282,16 +299,14 @@ get_agecuts <- function(df){
 #*******************************************************************************
 
 # The output data frame includes active members of all tiers.
-# Will need to break it down later when modeling tiers separately. 
+# df_nactives_raw
+# agecuts_actives
+# yoscuts_actives
 
-df_nactives
-agecuts_actives
-yoscuts_actives
 
 
 
 # Prepare data for the interpolation function
-
 
 make_lactives <- function(df, agecuts, yoscuts){
   lactives <- list(
@@ -300,7 +315,8 @@ make_lactives <- function(df, agecuts, yoscuts){
   	actives.yos = 
   		df %>%
   		select(
-  			planname = tier,
+  		  AV_date,
+  			planname = grp,
   			age.cell,
   			yos.cell,
   			nactives,
@@ -314,458 +330,175 @@ fillin_actives <- function(df){
 
 		fillin.actives.spreadyos.splineage(df) %>% 
 		ungroup %>%
-		select(planname, age, yos, ea,
-					 #age.cell, yos.cell,
+		select(AV_date,
+		       grp = planname, 
+		       age, 
+		       yos, 
+		       ea,
 					 nactives, 
 					 salary = salary.final) %>% 
-		mutate_at(vars(nactives, salary), funs(na2zero))
-	
+		#mutate_at(vars(nactives, salary), funs(na2zero))
+	   mutate(across(all_of(c("nactives", "salary")), na2zero)) %>% 
+     arrange(ea, yos)
 }
 
 
-lactives_allTiers <- make_lactives(df_nactives, agecuts_actives, yoscuts_actives)
-lactives_allTiers
+## Try using a single group
+# lactives <- filter(df_nactives_raw, grp == "inds") %>% make_lactives(agecuts_actives, yoscuts_actives)
+# lactives
+# 
+# nactives_fillin <- fillin_actives(lactives)
+# nactives_fillin
 
-actives_fillin_allTiers <- fillin_actives(lactives_allTiers)
-actives_fillin_allTiers
+
+## looping through all groups
+df_nactives_fillin <- 
+  df_nactives_raw %>% 
+  split(.$grp) %>% 
+  map( ~ make_lactives(.x, agecuts_actives, yoscuts_actives) %>% fillin_actives) %>% 
+  bind_rows()
 
 
 # Examine results
-actives_fillin_spread <- actives_fillin_allTiers %>% 
-	select(ea, age, nactives) %>% 
-	spread(age, nactives)
-
-salary_fillin_spread <- actives_fillin_allTiers %>% 
-	select(ea, age, salary) %>% 
-	spread(age, salary)
+# actives_fillin_spread <- 
+#   df_nactives_fillin %>% 
+#   filter(grp == "inds") %>% 
+# 	select(ea, age, nactives) %>% 
+# 	spread(age, nactives)
+# 
+# salary_fillin_spread <- 
+#   df_nactives_fillin %>% 
+#   filter(grp == "inds") %>%
+# 	select(ea, age, salary) %>% 
+# 	spread(age, salary)
 
 # actives_fillin %>%
 # 	summarise(avg.sal = sum(nactives * salary) / sum(nactives))
 
 
-#*******************************************************************************
-#              1.1 Merging external salary distribution schedules  ####
-#*******************************************************************************
-
-# Confirm that the NMR schedule cover the entire age and yos ranges
-actives_fillin_allTiers$age %>% range
-actives_fillin_allTiers$yos %>% range
-salSchedule_NMR$age %>% range
-salSchedule_NMR$yos %>% range
-
-actives_fillin_allTiers %<>% 
-	left_join(salSchedule_NMR, by = c("age", "yos")) %>% 
-	mutate(salary = na2zero(salary_NMR),
-				 salary_NMR = NULL)
 
 
 #*******************************************************************************
-#              1.2  Separating Tier 6 members and inactive members  ####
+#                    Initial retirees and beneficiaries   ####
 #*******************************************************************************
 
-# Tier 6 members
-# Members who joined the plan after April 1, 2012 are in Tier 4
-# The number of Tier 6 members (active and non-active) as of 2018/03/31
-# - 205020 out of 616906 (33.2%)
-# How to separate Tier 6 members from the original member matrix
-# YOS of Tier 6 members: 0-5
-# Issue: the number of member within this YOS range is greater than the target (205020)
-# - Original table: 224,465 members in the 0-4 YOS group
-# - filled table  : 245,867 members with YOS <= 5.
-# This implies that some members with YOS <= 4(and 5) are not Tier 6 members
-# Possible reasons: the number includes Tier 3-5 separated members with YOS <= 4(and 5). (assuming the YOS inactive members is frozen when separated.) 
-
-
-# Inactive members
-# The number of inactive members: 115,961 out of 616906 (18.8%)
-# How the separate inactive members from the original member matrix
-
-
-# Plan 1
-# YOS <= 5: 245866.5
-# Tier 6 active     168005
-# Tier 6 inactive    37015
-# Tier 3-5 inactive (should be age >= 26) 40846.5 ( = 245866.5 - 168005 - 37015)
-# YOS > 5: 371039.5
-# Tier 3-5 active   332940
-# Tier 3-5 inactive 38099.5 ( = 411886-332940-40846.5)
-
-# Tier 6 total   =   205020
-# Tier 3-5 total =   411886
-
-# Step 1: Separating members with YOS <=5 and YOS > 5. 
-# Step 2: estimate numbers of active members for Tier 6 and Tier 1-5
-# TEMP: use this method for now
-
-# Plan 2
-# Separate all inactive members based on separation rate
-# Separate Tier 6 active members from Tier 3-5 active members with YOS <= 5
-# TODO: may want to adjust the original grouped table first. 
-
-
-## Look at data
-member_byTier_ERS
-member_byStatus_ERS
-
-
-actives_fillin_allTiers %>% 
-	filter(yos <=5, age >=26) %>% 
-	pull(nactives) %>% sum
-
-actives_fillin_allTiers %>% 
-	filter(yos <=4) %>% 
-	summarise(N = sum(nactives))
-
-
-actives_fillin_allTiers$yos %>% range
-actives_fillin_allTiers$age %>% range
-
-
-## Construct separation rates by age and yos
-df_qxt_full <-
-	expand.grid(age = 20:69, yos = 0:39) %>% as_tibble() %>%
-	left_join(df_qxt, by = "age") %>%
-	mutate(qxt = case_when(yos < 2 ~ yos_lt2,
-												 yos == 2 ~ yos_e2,
-												 yos == 3 ~ yos_e3,
-												 yos == 4 ~ yos_e4,
-												 yos>=5&yos<=9 ~ yos_5to9,
-												 yos>=10 ~ yos_ge10,
-												 TRUE ~ NA_real_
-	)) %>%
-	select(age, yos, qxt)
-
-
-## Constants
-N_inactives <- filter(member_byStatus_ERS, year == 2018)$ninactives
-
-N_actives_t6   <- 168005
-N_inactives_t6 <- 37015
-
-N_actives_nont6   <- 332940
-N_inactives_nont6 <- 78946
-
-
-## Implementing method 1
-
-# Step 1: Separating members with YOS <=5 and YOS > 5. 
-# YOS <= 5
-# Tier 6 active 168k
-# Tier 6 inactive 37k
-# Tier 3-5 inactive (should be age >= 26) 41k
-# YOS > 5
-# Tier 3-5 active 333k 
-# Tier 3-5 inactive 38k
-
-df <- 
-	actives_fillin_allTiers %>% 
-	left_join(df_qxt_full, by = c("age", "yos")) %>% 
-	rename(nmembers = nactives) %>% 
-	mutate(nmember_yos5minus = ifelse(yos <=5, nmembers, 0),
-				 nmember_yos5plus  = ifelse(yos >5,  nmembers, 0),
-				 
-				 salary_yos5minus = ifelse(yos <=5, salary, 0),
-				 salary_yos5plus  = ifelse(yos >5,  salary, 0),
-				 
-	) 
-
-df$nmember_yos5minus %>% sum
-df$nmember_yos5plus  %>% sum
-
-# Step 2: estimate numbers of active members for Tier 6 and Tier 1-5
-df %<>% 
-	mutate(
-		nactives_tier6    = nmember_yos5minus - nmember_yos5minus * qxt * (sum(nmember_yos5minus) - N_actives_t6) / sum(nmember_yos5minus * qxt),
-		nactives_nontier6 = nmember_yos5plus  -  nmember_yos5plus * qxt * (sum(nmember_yos5plus)  - N_actives_nont6) / sum(nmember_yos5plus * qxt)
-	)
-
-df$nactives_tier6 %>% sum
-df$nactives_nontier6 %>% sum
-
-
-actives_fillin_t6 <- 
-	df %>% select(planname, age, yos, ea, nactives = nactives_tier6, salary = salary_yos5minus) %>% 
-	mutate(planname = "tier6")
-
-actives_fillin_nont6 <- 
-	df %>% select(planname, age, yos, ea, nactives = nactives_nontier6, salary = salary_yos5plus) %>% 
-	mutate(planname = "nontier6")
-
-# actives_fillin_nont6$nactives %>% sum
-# actives_fillin_t6$nactives %>% sum
-
-
-#*******************************************************************************
-#                    1.3 Applying assumed salary distribution   ####
-#*******************************************************************************
-
-# Constraints for the estimation
-# 1. yos/age distribution, based on other large general employee plans or NMR2011
-# 2. total salaries of non-Tier 6 and Tier 6 members
-# non-Tier 6: 20,740,475,035 
-# Tier 6:      5,232,194,578 
-
-# TEMP: For now, use NMR2011 distribution
-
-salary_tot_nontier6 <- 20740475035
-salary_tot_tier6    <-  5232194578 
-
-# actives_fillin_t6
-# actives_fillin_nont6
-# actives_fillin_allTiers
-
-
-actives_fillin_nont6 %<>% 
-	mutate(salary = salary * salary_tot_nontier6 / sum(salary * nactives))
-
-actives_fillin_t6 %<>% 
-	mutate(salary = salary * salary_tot_tier6 / sum(salary * nactives))
-
-
-(actives_fillin_nont6$salary * actives_fillin_nont6$nactives) %>% sum
-(actives_fillin_t6$salary    * actives_fillin_t6$nactives)    %>% sum
-
-
-actives_fillin_allTiers %<>% 
-	left_join(select(actives_fillin_t6,    age, yos, salary_t6    = salary, nactives_t6    = nactives), by = c("age", "yos")) %>% 
-	left_join(select(actives_fillin_nont6, age, yos, salary_nont6 = salary, nactives_nont6 = nactives), by = c("age", "yos")) %>% 
-	mutate(salary   = ifelse(salary_t6   !=0, salary_t6,   salary_nont6),
-				 nactives = ifelse(nactives_t6 !=0, nactives_t6, nactives_nont6)
-				 ) %>% 
-	select(-salary_t6, -salary_nont6, -nactives_t6, -nactives_nont6)
-
-# Check the result
-#actives_fillin_allTiers$nactives %>% sum
-#sum(with(actives_fillin_allTiers, nactives*salary))
-
-
-# Constructing inputs for the model
-init_actives_tiers <- 
-	bind_rows(
-		actives_fillin_allTiers,
-		actives_fillin_t6,
-		actives_fillin_nont6
-	) %>% 
-	rename(tier = planname)
-
-init_actives_tiers
-
-# Spread and examine the results
-df_spread <- actives_fillin_t6 %>%
-	select(ea, age, nactives) %>%
-	spread(age, nactives)
-
-
-
-
-
-
-
-#*******************************************************************************
-#                    2.  Initial service retirees   ####
-#*******************************************************************************
-
-df_nservRets
-agecuts_servRets
-yoscuts_servRets
-
-# Spreading age/yos cells
-make_lservRets <- function(df, agecuts, yoscuts){
-	lactives <- list(
-		agecuts = agecuts,
-		yoscuts = yoscuts,
-		actives.yos = 
-			df %>%
-			select(
-				planname = tier,
-				age.cell,
-				yos.cell,
-				nactives = nservRets,
-				salary   = benefit_servRet,
-			) %>%
-			mutate(age = age.cell, yos = yos.cell)
-	)
+## Local helper functions
+make_lretirees <- function(df, agecuts, ben_type){
+  
+  
+  # data structure of the input list of fillin.actives.spreadyos.splineag
+  # list name: ldata
+  # $agecuts:
+  #   - age.cell
+  #   - agelb
+  #   - ageub
+  # $data
+  #   - age.cell
+  #   - age
+  #   - planname
+  #   - N
+  #   - V
+  # $varNames
+  #   - name_N
+  #   - name_V 
+  
+  name_V <- paste0("benefit_tot_", ben_type)
+  name_N <- paste0("n_", ben_type)
+  
+  data <- list(
+    agecuts = agecuts,
+    
+    data = 
+      df %>%
+      select(
+        AV_date,
+        planname = grp,
+        age.cell,
+        !!name_N,
+        !!name_V
+      ) %>%
+      rename(N = !!name_N,
+             V = !!name_V) %>% 
+      mutate(age = age.cell),
+    
+    varNames = list(name_N = name_N, 
+                    name_V = name_V)
+  )
 }
 
-fillin_servRets <- function(df){
-	
-	fillin.actives.spreadyos.splineage(df) %>% 
-		ungroup %>%
-		select(planname, age, yos, ea,
-					 #age.cell, yos.cell,
-					 nactives, 
-					 salary = salary.final) %>% 
-		mutate_at(vars(nactives, salary), funs(na2zero)) %>% 
-		rename(nservRets = nactives,
-					 benefit_servRet = salary)
+fillin_retirees <- function(df){
+  
+  fillin.retirees.splineage(df) %>% 
+    ungroup %>%
+    select(AV_date,
+           grp = planname, 
+           age, 
+           everything()) %>% 
+    # mutate_at(vars(nactives, salary), funs(na2zero))
+    # mutate(across(all_of(c("nactives", "salary")), na2zero)) %>% 
+    arrange(age)
 }
 
 
-lservRets <- make_lservRets(df_nservRets, agecuts_servRets, yoscuts_servRets)
-lservRets
+## Try using a single group
+lretirees <- filter(df_nretirees_raw, grp == "inds") %>% make_lretirees(agecuts_retirees, "beneficiaries")
+lretirees %>% fillin_retirees()
 
-servRets_fillin_ageYOS <- fillin_servRets(lservRets)
-servRets_fillin_ageYOS
+## Loop through all groups for each type of benefit
 
+df_n_servRet_fillin <- 
+  df_nretirees_raw %>% 
+  split(.$grp) %>% 
+  map( ~ make_lretirees(.x, agecuts_retirees, "servRet") %>% fillin_retirees) %>% 
+  bind_rows()
 
+df_n_disbRet_occ_fillin <- 
+  df_nretirees_raw %>% 
+  split(.$grp) %>% 
+  map( ~ make_lretirees(.x, agecuts_retirees, "disbRet_occ") %>% fillin_retirees) %>% 
+  bind_rows()
 
+df_n_disbRet_nonocc_fillin <- 
+  df_nretirees_raw %>% 
+  split(.$grp) %>% 
+  map( ~ make_lretirees(.x, agecuts_retirees, "disbRet_nonocc") %>% fillin_retirees) %>% 
+  bind_rows()
 
-# Turning age/yos cells into age groups
-
-servRets_fillin <- 
-	servRets_fillin_ageYOS %>% 
-	group_by(age) %>% 
-	summarise(planname  = unique(planname),
-						benefit_servRet = sum(nservRets*benefit_servRet) / sum(nservRets),
-						nservRets = sum(nservRets)
-	)
-servRets_fillin
-
-# Check the data
-# servRets_fillin_ageYOS$nservRets %>% sum
-# servRets_fillin$nservRets %>% sum	
-# with(servRets_fillin_ageYOS, sum(nservRets * benefit_servRet))
-# with(servRets_fillin, sum(nservRets * benefit_servRet))
-
-
-# Constructing inputs for the model
-init_servRets_tiers <- 
-	bind_rows(
-		servRets_fillin,
-		servRets_fillin %>% mutate(planname = "nontier6"),
-		servRets_fillin %>% mutate(planname = "tier6", nservRets = 0, benefit_servRet = 0)
-	) %>% 
-	rename(tier = planname)
-init_servRets_tiers
-	
+df_n_beneficiaries_fillin <- 
+  df_nretirees_raw %>% 
+  split(.$grp) %>% 
+  map( ~ make_lretirees(.x, agecuts_retirees, "beneficiaries") %>% fillin_retirees) %>% 
+  bind_rows()
 
 
-# Examine results
-servRets_fillin_spread <- servRets_fillin_ageYOS %>% 
-	select(ea, age, nservRets) %>% 
-	spread(age, nservRets)
 
-benefit_servRet_fillin_spread <- servRets_fillin_ageYOS %>% 
-	select(ea, age, benefit_servRet) %>% 
-	spread(age, benefit_servRet)
-
-servRets_fillin_spread 
-benefit_servRet_fillin_spread
+df_n_servRet_fillin
+df_n_disbRet_occ_fillin
+df_n_disbRet_nonocc_fillin
+df_n_beneficiaries_fillin
 
 
 #*******************************************************************************
-#                    3.  Initial disability retirees   ####
+#                    6. Review and save results   ####
 #*******************************************************************************
 
-df_ndisbRets
-agecuts_disbRets
-yoscuts_disbRets
-
-# Spreading age/yos cells
-make_ldisbRets <- function(df, agecuts, yoscuts){
-	lactives <- list(
-		agecuts = agecuts,
-		yoscuts = yoscuts,
-		actives.yos = 
-			df %>%
-			select(
-				planname = tier,
-				age.cell,
-				yos.cell,
-				nactives = ndisbRets,
-				salary   = benefit_disbRet,
-			) %>%
-			mutate(age = age.cell, yos = yos.cell)
-	)
-}
-
-fillin_disbRets <- function(df){
-	
-	fillin.actives.spreadyos.splineage(df) %>% 
-		ungroup %>%
-		select(planname, age, yos, ea,
-					 #age.cell, yos.cell,
-					 nactives, 
-					 salary = salary.final) %>% 
-		mutate_at(vars(nactives, salary), funs(na2zero)) %>% 
-		rename(ndisbRets = nactives,
-					 benefit_disbRet = salary)
-}
-
-ldisbRets <- make_ldisbRets(df_ndisbRets, agecuts_disbRets, yoscuts_disbRets)
-ldisbRets
-
-disbRets_fillin_ageYOS <- fillin_disbRets(ldisbRets)
-disbRets_fillin_ageYOS
-
-
-# Turning age/yos cells into age groups
-
-disbRets_fillin <- 
-	disbRets_fillin_ageYOS %>% 
-	group_by(age) %>% 
-	summarise(planname  = unique(planname),
-						benefit_disbRet = sum(ndisbRets*benefit_disbRet) / sum(ndisbRets),
-						ndisbRets = sum(ndisbRets)
-	)
-disbRets_fillin
-
-# Check the data
-# disbRets_fillin_ageYOS$ndisbRets %>% sum
-# disbRets_fillin$ndisbRets %>% sum
-# with(disbRets_fillin_ageYOS, sum(ndisbRets * benefit_disbRet))
-# with(disbRets_fillin, sum(ndisbRets * benefit_disbRet))
-
-
-
-# Constructing inputs for the model
-init_disbRets_tiers <- 
-	bind_rows(
-		disbRets_fillin,
-		disbRets_fillin %>% mutate(planname = "nontier6"),
-		disbRets_fillin %>% mutate(planname = "tier6", ndisbRets = 0, benefit_disbRet = 0)
-	) %>% 
-	rename(tier = planname)
-init_disbRets_tiers
-
-
-
-# Examine results
-disbRets_fillin_spread <- disbRets_fillin_ageYOS %>% 
-	select(ea, age, ndisbRets) %>% 
-	spread(age, ndisbRets)
-
-benefit_disbRet_fillin_spread <- disbRets_fillin_ageYOS %>% 
-	select(ea, age, benefit_disbRet) %>% 
-	spread(age, benefit_disbRet)
-
-disbRets_fillin_spread 
-benefit_disbRet_fillin_spread
-
-
-
-
-
-
-
-#*******************************************************************************
-#                    6.  save results   ####
-#*******************************************************************************
-
-init_actives_tiers
-init_servRets_tiers
-init_disbRets_tiers
-# init_terms_tiers
-
+# df_nactives_fillin
+# df_n_servRet_fillin
+# df_n_disbRet_occ_fillin
+# df_n_disbRet_nonocc_fillin
+# df_n_beneficiaries_fillin
 
 
 save(
-	init_actives_tiers,
-	init_servRets_tiers,
-	#init_survivors,
-	init_disbRets_tiers,
-	# init_terms_tiers,
-	file = paste0(dir_data, "Data_NYSERS_memberData_20180331_imputed.RData")
+
+  df_nactives_fillin,
+  
+  df_n_servRet_fillin,
+  df_n_disbRet_occ_fillin,
+  df_n_disbRet_nonocc_fillin,
+  df_n_beneficiaries_fillin,
+  
+	file = paste0(dir_data, "Data_CalPERS_demographics_20180630_fillin.RData")
 )
 
 
