@@ -82,7 +82,7 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
   
   adf.g	
 
-	# expand the grouped data frame to all allowable age-yos combinations ####
+	# expand the grouped data frame to all allowable age-yos combinations 
 	xpnd <- function(df) {
 		# expand to all age-yos combinations but only keep those where ea>=15 or, if there are no such records,
 		# keep the recrods with max ea
@@ -102,7 +102,7 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
 		arrange(age, yos)
 	
 	
-	# work with the expanded data ####
+	# work with the expanded data 
 	
 	# we have to anchor the endpoints with reasonable values BEFORE computing the spline
 	adjustends <- function(age, salary) {
@@ -295,7 +295,7 @@ fillin.retirees.splineage <- function(list_data) {
 
 
 #*******************************************************************************
-#                    1.  Initial actives   ####
+#                     Initial actives   ####
 #*******************************************************************************
 
 # The output data frame includes active members of all tiers.
@@ -402,7 +402,7 @@ make_lretirees <- function(df, agecuts, ben_type){
   #   - name_N
   #   - name_V 
   
-  name_V <- paste0("benefit_tot_", ben_type)
+  name_V <- paste0("benefit_", ben_type)
   name_N <- paste0("n_", ben_type)
   
   data <- list(
@@ -479,7 +479,7 @@ df_n_beneficiaries_fillin
 
 
 #*******************************************************************************
-#                    6. Review and save results   ####
+#                    Review and save results   ####
 #*******************************************************************************
 
 # df_nactives_fillin

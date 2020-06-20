@@ -147,6 +147,20 @@ df_nretirees_raw <-
 agecuts_retirees <- get_agecuts(df_nretirees_raw)
 
 
+# Calculate average benefit payments
+
+df_nretirees_raw %<>% 
+  mutate(benefit_servRet        = benefit_tot_servRet / n_servRet,
+         benefit_disbRet_nonocc = benefit_tot_disbRet_nonocc / n_disbRet_nonocc,
+         benefit_disbRet_occ    = benefit_tot_disbRet_occ / n_disbRet_occ,
+         benefit_death_nonocc   = benefit_tot_death_nonocc / n_death_nonocc,  
+         benefit_death_occ      = benefit_tot_death_occ / n_death_occ,
+         benefit_beneficiaries  = benefit_tot_beneficiaries / n_beneficiaries
+        ) %>% 
+  mutate(across(!c(AV_date, grp, age.cell, agegrp), na2zero))
+
+
+
 #*******************************************************************************
 #                     ## Review and save results ####
 #*******************************************************************************
