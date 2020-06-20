@@ -1,83 +1,33 @@
 # This script calculate aggregate annual ALs, NCs and benefit payments.
 
 
-get_AggLiab <- function( tier_select_,
-                         liab_,
-												 pop_,
-												 
-                         #liab.ca_,
-                         #liab.disb.ca_,
-                         
-                         # mortality.post.model_ = mortality.post.model,
-                         #init_beneficiaries_all_  = init_beneficiaries_all,
-                         #init_retirees.ca_all_    = init_retirees.ca_all,
-                         #init_disb.ca_all_        = init_disb.ca_all,
-												 
-                         paramlist_        = paramlist,
-                         Global_paramlist_ = Global_paramlist){
+get_AggLiab <- function(pop_,
+                        indivLiab_, 
+                        val_paramlist_    =  val_paramlist,
+                        Global_paramlist_ =  Global_paramlist
+){
 
   # This function calculates total AL, NC and benefits.
-  
-  # Run the section below when developing new features.  
-    # for single tier
-     # tier_select_ = paramlist$singleTier_select
-     # liab_        = liab_allTiers
-     # #liab.ca_ = liab.ca
-     # #liab.disb.ca_ = liab.disb.ca
-     # pop_    = pop_allTiers
-     # # mortality.post.model_ = mortality.post.model
-     # #init_beneficiaries_all_  = init_beneficiaries_all
-     # #init_retirees.ca_all_    = init_retirees.ca_all
-     # #init_disb.ca_all_        = init_disb.ca_all
-     # paramlist_ = paramlist
-     # Global_paramlist_ = Global_paramlist
-     
-   # for all tiers
-     # Tier_select_ = "tCD"
-     # liab_   = liab.tCD
-     # liab.ca_ = liab.ca.tCD
-     # liab.disb.ca_ = liab.disb.ca.tCD
-     # pop_    = pop$pop.tCD
-     # mortality.post.model_ = mortality.post.model.tCD
-     # 
-     # init_beneficiaries_all_  = init_beneficiaries_all
-     # init_retirees.ca_all_    = init_retirees.ca_all
-     # init_disb.ca_all_        = init_disb.ca_all
-     # paramlist_ = paramlist
-     # Global_paramlist_ = Global_paramlist
 
+    
+  # Run the section below when developing new features.  
+   pop_ = pop
+   indivLiab_ = indivLiab
+   val_paramlist_    =  val_paramlist
+   Global_paramlist_ =  Global_paramlist
+   
+   
    assign_parmsList(Global_paramlist_, envir = environment())
    assign_parmsList(paramlist_,        envir = environment())
    
-   # Choosing tier specific parameters and data
-   # cola     <- tier.param[Tier_select_, "cola"]
-   # init_beneficiaries_ <- get_tierData(init_beneficiaries_all_, Tier_select_)
-   # init_retirees.ca_   <- get_tierData(init_retirees.ca_all_, Tier_select_)
-   # init_disb.ca_       <- get_tierData(init_disb.ca_all_,     Tier_select_)
    
-  # Notes on naming conventions:
-   # "tot" means total AL/NA/... in each year * age * ea cell
-   # "sum" means sum of AL/NA/... across age * ea in each year. 
-   # "av"  menas sum of variables related to life annuity, contingent annuity, and term benefits for actives. (now plus death benefit and disability benefit)
+ 
+
    
-   # Notes on naming conventions:
+## Notes on naming conventions:
    # "cellsum" means total AL/NA/... in each year x age x ea cell
    # "yearsum" means sum of AL/NA/... across age x ea in each year. 
    # "actAll"  menas sum of variables related to active members, including life annuity, contingent annuity, and term benefits for actives. (now plus death benefit and disability benefit)
-   
-   
-   # liab_
-   # #liab.ca_
-   # #liab.disb.ca_
-   # # 
-   # # liab_$active  %<>% filter((year - (age - ea)) == 2017 )
-   # # liab_$la      %<>% filter((year - (age - ea)) == 2017 )
-   # # liab_$term    %<>% filter((year - (age - ea)) == 2017 )
-   # # liab_$death   %<>% filter((year - (age - ea)) == 2017 )
-   # # liab_$disb.la %<>% filter((year - (age - ea)) == 2017 )
-   # 
-   # pop_$active %<>% filter((year - (age - ea)) == 2017 )
-   # pop_$active %>% filter(year == 2017) %>% summarize(n = sum(number.a))
    
 #*******************************************************************************
 #               ## Liabilities and NCs for actives   ####

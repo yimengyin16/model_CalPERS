@@ -102,7 +102,8 @@ pop <- get_demographics(tierData_miscAll)
 invisible(gc())
 source("model/valuation/model_val_indivLiab.R")
 
-indivLiab <- get_indivLab(tierData_miscAll)
+indivLiab <- list()
+indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLab(tierData_miscAll)
 
 
 

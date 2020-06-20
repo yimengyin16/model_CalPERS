@@ -430,7 +430,7 @@ for (j in 1:(nyear - 1)){
   ls_demo[[tierData$tier_name]]$temp$out_active  <- with(ls_demo[[tierData$tier_name]]$temp, active2defrRet.vest + active2defrRet.refund + active2disbRet + active2servRet.la + active2dead) 
   ls_demo[[tierData$tier_name]]$temp$new_entrants <- 
     calc_entrants(ls_demo[[tierData$tier_name]]$wf_active[, , j], 
-                  ls_demo[[tierData$tier_name]]$wf_active[, , j] - out_active, 
+                  ls_demo[[tierData$tier_name]]$wf_active[, , j] - ls_demo[[tierData$tier_name]]$temp$out_active, 
                   val_paramlist_$wf_growth, 
                   dist = tierData$entrants_dist, 
                   new_entrants = val_paramlist$new_entrants) # new entrants
