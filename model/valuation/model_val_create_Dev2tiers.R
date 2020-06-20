@@ -100,21 +100,26 @@ pop <- get_demographics(tierData_miscAll)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-# source("model/valuation/model_val_demographics_singleTier.R")
+source("model/valuation/model_val_indivLiab.R")
 
-
-
-
-
-
-
+indivLiab <- get_indivLab(tierData_miscAll)
 
 
 
 #*******************************************************************************
-#     5. Aggregate actuarial liabilities, normal costs and benenfits        ####
+#     Aggregate actuarial liabilities, normal costs and benenfits        ####
 #*******************************************************************************
-source("NYSERS_Model_AggLiab.R")
+source("model/valuation/model_val_aggLiab.R")
+
+
+
+
+
+
+
+
+
+
 invisible(gc())
 
 if(paramlist$tier_Mode == "singleTier"){

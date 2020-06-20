@@ -96,11 +96,13 @@ range_ea  <- 20:74  # max retirement age is assumed to be 75 (qxr = 1 at age 75 
 # Tier specific parameters
 
 tier_name <- "miscAll"
-age_vben <- 59 # assumed age of starting receiving deferred retirement benefits
-
+age_vben  <- 59 # assumed age of starting receiving deferred retirement benefits
+v.year    <- 5
+fasyears  <- 1  # based on policy before PEPRA
+cola_assumed <- 0.02 # assumed cola rates for valuation  
 
 # Other tier params to add
-# fasyears	cola	age_vben	v.year
+# cola
 
 # EEC rate, need to think about EEC
 
@@ -487,7 +489,7 @@ df_n_actives_tier <-
  # For now, combine service retirees and beneficiaries
 
 df_n_servRet_tier <- 
-  left_join(df_n_servRet_fillin,
+  full_join(df_n_servRet_fillin,
             df_n_beneficiaries_fillin,
             by = c("AV_date", "grp", "age", "age.cell")
             ) %>% 
@@ -499,7 +501,8 @@ df_n_servRet_tier <-
             benefit_beneficiaries = weighted.mean(benefit_beneficiaries, n_beneficiaries, na.rm= TRUE),
             n_beneficiaries       = sum(n_beneficiaries, na.rm = TRUE),
             
-            .groups = "rowwise") %>% 
+            .groups = "drop") %>% 
+  colwise(na2zero)(.) %>% 
   mutate(grp = tier_name,
          benefit_servRet = na2zero((benefit_servRet * n_servRet + benefit_beneficiaries * n_beneficiaries) / (n_servRet + n_beneficiaries)), 
          n_servRet       = n_servRet + n_beneficiaries
@@ -559,7 +562,10 @@ df_n_disbRet_tier <-
 tier_params <- 
   list(
     tier_name = tier_name,
-    age_vben = age_vben
+    age_vben  = age_vben,
+    v.year    = v.year,
+    fasyears  = fasyears,  # based on policy before PEPRA
+    cola_assumed = cola_assumed 
   )
 
 
