@@ -99,7 +99,9 @@ tier_name <- "miscAll"
 age_vben  <- 59 # assumed age of starting receiving deferred retirement benefits
 v.year    <- 5
 fasyears  <- 1  # based on policy before PEPRA
+bfactor   <- 0.02
 cola_assumed <- 0.02 # assumed cola rates for valuation  
+EEC_rate <- 0.07
 
 # Other tier params to add
 # cola
@@ -565,7 +567,10 @@ tier_params <-
     age_vben  = age_vben,
     v.year    = v.year,
     fasyears  = fasyears,  # based on policy before PEPRA
-    cola_assumed = cola_assumed 
+    cola_assumed = cola_assumed,
+    
+    bfactor = bfactor,
+    EEC_rate = EEC_rate
   )
 
 

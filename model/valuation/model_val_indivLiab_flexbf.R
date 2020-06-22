@@ -134,8 +134,15 @@ liab_active %<>%
     COLA.scale_compound = (1 + cola_assumed)^(age - min(age)),     # later we can specify other kinds of COLA scale. Note that these are NOT COLA factors. They are used to derive COLA factors for different retirement ages.
     
     ## Accrued service retirement benefits 
-    Bx = na2zero(bfactor * yos * fas), # simple formula for accrued benefits, 
-                                       # note that only Bx for ages above min retirement age are necessary under EAN.
+    # Bx = na2zero(bfactor * yos * fas), # simple formula for accrued benefits, 
+    #                                    # note that only Bx for ages above min retirement age are necessary under EAN.
+    # 
+    
+    # Bx = na2zero(benfactor * yos * fas),                        # accrued benefits
+    bfactor_vec = ifelse(year >= year_reduction, bfactor - bfactor_reduction, bfactor),
+    bfactor_vec = ifelse(yos  == 0, 0, bfactor_vec),
+    Bx = na2zero(cumsum(bfactor_vec) * fas),
+    
     
     #calibration
   	# Bx = ifelse(start_year <= init_year, Bx * 1.03, Bx), 
@@ -931,5 +938,11 @@ liab <- list(active    = liab_active,
 						 )
 
 }
+
+
+
+
+
+
 
 

@@ -2,7 +2,7 @@
 
 
 # Valuation name
-val_name <- "Dev_2tiers"
+val_name_run <- "Dev_2tiers_bf1"
 
 
 
@@ -21,7 +21,7 @@ dir_planInfo <- "inputs/data_proc/"
 filePath_planInfo <- paste0(dir_planInfo, "Data_CalPERS_planInfo_AV2018.RData")
 
 # Output folder  
-dir_outputs <- "model/valuation/outputs_val/"
+dir_outputs_val <- "model/valuation/outputs_val/"
 
 
 ## Import global parameters
@@ -31,7 +31,7 @@ Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>%
  
 ## Import valuation parameters
 val_paramlist <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) %>% 
-  filter(!is.na(val_name), val_name == val_name) %>% 
+  filter(!is.na(val_name), val_name == val_name_run) %>% 
   as.list
 
 
@@ -108,7 +108,7 @@ pop <- get_demographics(tierData_miscAll)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab.R")
+source("model/valuation/model_val_indivLiab_flexbf.R")
 
 indivLiab <- list()
 indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLiab(tierData_miscAll)
@@ -156,7 +156,7 @@ saveRDS(
       init_amort_raw = init_amort_raw_val,
       init_unrecReturns.unadj = init_unrecReturns.unadj_val
     ),
-  file = paste0(dir_outputs, "val_", val_name, ".rds")
+  file = paste0(dir_outputs_val, "val_", val_name, ".rds")
 )
 
 

@@ -2,7 +2,7 @@
 
 
 # Valuation name
-sim_name <- "Dev"
+sim_name_run <- "Dev_bf1"
 
 
 #*******************************************************************************
@@ -24,8 +24,15 @@ Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>%
  
 ## Import valuation parameters
 sim_paramlist <- read_excel(filePath_runControl, sheet="params_sim", skip  = 3) %>% 
-  filter(!is.na(sim_name), sim_name == sim_name) %>% 
+  filter(!is.na(sim_name), sim_name == sim_name_run) %>% 
   as.list
+
+## Import investment return scenarios
+returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>% filter(!is.na(scenario))
+
+
+
+
 
 
 ## Additinal global variables 
@@ -42,7 +49,7 @@ Global_paramlist$range_ea  <- with(Global_paramlist, min_ea:max_ea)
 #                         Load data                                         ####
 #*******************************************************************************
 
-sim_paramlist$run_val <- TRUE
+sim_paramlist$run_val <- FALSE
 if(sim_paramlist$run_val){
   source(paste0("model/valuation/model_val_create_", sim_paramlist$val_name, ".R"))
 }
@@ -58,7 +65,7 @@ dir_val <- "model/valuation/outputs_val/"
 source("model/simulation/model_sim_invReturns.R")
 sim_paramlist$seed <- 123
 i.r <- gen_returns()
-# i.r
+ i.r
 # i.r[1:5, 1:5]
 
 
@@ -94,7 +101,7 @@ saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name, ".rds"))
 
 
 # Display1 Basic examination
-var_display1 <- c("sim_name", "sim", "year", 
+var_display1 <- c("sim_name", "val_name", "sim", "year", 
                   "FR_MA", "FR_AA", "MA", "AA", 
                   "AL", 
                   "AL.active", "AL.nonactive",

@@ -2,8 +2,8 @@
 # This module create investment return series. 
 
 gen_returns <- function( sim_paramlist_ = sim_paramlist,
-                         Global_paramlist_ = Global_paramlist
-                         # returnScenarios_ = returnScenarios
+                         Global_paramlist_ = Global_paramlist,
+                         returnScenarios_ = returnScenarios
                          ){
    
   ## Unquote for development
@@ -29,7 +29,7 @@ gen_returns <- function( sim_paramlist_ = sim_paramlist,
     # nsim = 5
   	
     returnScenarios_local <- returnScenarios_ %>% filter(scenario == return_scenario)
-    set.seed(paramlist$seed4)
+    set.seed(sim_paramlist_$seed)
     i.r <- cbind(
       with(returnScenarios_local, create_returns(return_det, 0, period)), # add deterministic returns
       replicate(nsim, with(returnScenarios_local, create_returns(r.mean, r.sd, period)))
