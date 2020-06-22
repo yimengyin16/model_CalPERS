@@ -1,4 +1,4 @@
-# This script calculates individdual liabilities and normal costs for PERF A
+# This script calculates individual liabilities and normal costs for PERF A
 
 
 
@@ -31,18 +31,17 @@
 
 
 
-get_indivLab <- function(tierData,
+get_indivLiab <- function(tierData,
                          val_paramlist_    =  val_paramlist,
                          Global_paramlist_ =  Global_paramlist){
 
 # Inputs for development
-# tierData <- tierData_miscAll   
+# tierData <- tierData_miscAll
 # val_paramlist_    =  val_paramlist
 # Global_paramlist_ =  Global_paramlist
   
 assign_parmsList(Global_paramlist_, envir = environment())
 assign_parmsList(val_paramlist_,    envir = environment()) 
-
 
 
 assign_parmsList(fasyears <- tierData$tier_params,    envir = environment()) 
@@ -187,7 +186,7 @@ liab_active %<>%
     
     
     ## Temporary annuity values from age x to retirment age (fixed end)
-    # These values will used to calculate PVFNCs
+    # These values will used to calculate PVFNCxs
     # TODO: figure better ways to do the valuation
     # Note: It is assumed that
     #   - the NCs for service and disability retirement benefits are spread through max_retAge - 1
@@ -360,7 +359,8 @@ liab_servRet.la <-
       liab_servRet.la %>% 
         filter(start_year + (age_servRet - ea) >= init_year + 1, # retire after year 2, LHS is the year of retirement
    						 start_year + age - ea           >= init_year + 1) # years after year 2
-   ) 
+   ) %>% 
+  filter(year %in% seq(init_year, len = nyear))
 
 cat("......DONE\n")
 # liab_servRet.la %>% head
@@ -396,17 +396,18 @@ liab_active %<>%
 
   # NC and AL of EAN.CD
   NCx.EAN.CD.servRet.laca = ifelse(age < max_retAge, PVFBx.servRet.laca[age == min(age)]/ayx[age == max_retAge], 0),
-  PVFNC.EAN.CD.servRet.laca = NCx.EAN.CD.servRet.laca * axR,
-  ALx.EAN.CD.servRet.laca = PVFBx.servRet.laca - PVFNC.EAN.CD.servRet.laca,
+  PVFNCx.EAN.CD.servRet.laca = NCx.EAN.CD.servRet.laca * axR,
+  ALx.EAN.CD.servRet.laca = PVFBx.servRet.laca - PVFNCx.EAN.CD.servRet.laca,
   
   # NC and AL of EAN.CP
   NCx.EAN.CP.servRet.laca   = ifelse(age < max_retAge, sx * PVFBx.servRet.laca[age == min(age)]/(sx[age == min(age)] * ayxs[age == max_retAge]), 0),
-  PVFNC.EAN.CP.servRet.laca = NCx.EAN.CP.servRet.laca * axRs,
-  ALx.EAN.CP.servRet.laca   = PVFBx.servRet.laca - PVFNC.EAN.CP.servRet.laca
+  PVFNCx.EAN.CP.servRet.laca = NCx.EAN.CP.servRet.laca * axRs,
+  ALx.EAN.CP.servRet.laca   = PVFBx.servRet.laca - PVFNCx.EAN.CP.servRet.laca
   ) 
 
 cat("......DONE\n")
 
+# liab_active$ALx.EAN.CP.servRet.laca #%>% sum(na.rm = T)
 
 
 
@@ -424,7 +425,7 @@ cat("Deferred Retirement - actives")
 # 1. Note that the PVFB and AL are different at age age_vben - 1. This is very different from the case for retirement benefits with single retirement age, where PVFB = AL for EAN actuarial methods
 #    at age r.max
 # 2. During each year with a positive probability of termination, a proportion of the active member liability will be shifted to vested term liabilities as active members quit their jobs. At each
-#    new period, changes in the liability side are: reduction in PVFB, increase in AL for terminated and increase in -PVFNC(by NC). Note the first two parts cancel out, so the
+#    new period, changes in the liability side are: reduction in PVFB, increase in AL for terminated and increase in -PVFNCx(by NC). Note the first two parts cancel out, so the
 #    increase in liability side is equal to NC. If the amount of NC is fully contributed to the asset side, the balance sheet will remain balanced.
 #
 # CAUTION!: When PVFB is only amortized up to age min_retAge, there will be a problem if actives entering after min_retAge can get vested, 
@@ -461,13 +462,13 @@ liab_active %<>%
          
          # NC and AL of EAN.CD
          NCx.EAN.CD.defrRet   = ifelse(age < age_vben, PVFBx.defrRet[age == min(age)]/ayx[age == age_vben], 0),
-  			 PVFNC.EAN.CD.defrRet = NCx.EAN.CD.defrRet * axr,
-         ALx.EAN.CD.defrRet   = PVFBx.defrRet - PVFNC.EAN.CD.defrRet,
+  			 PVFNCx.EAN.CD.defrRet = NCx.EAN.CD.defrRet * axr,
+         ALx.EAN.CD.defrRet   = PVFBx.defrRet - PVFNCx.EAN.CD.defrRet,
          
          # NC and AL of EAN.CP
          NCx.EAN.CP.defrRet   = ifelse(age < age_vben, PVFBx.defrRet[age == min(age)]/(sx[age == min(age)] * ayxs[age == age_vben]) * sx, 0), 
-         PVFNC.EAN.CP.defrRet = NCx.EAN.CP.defrRet * axrs,
-         ALx.EAN.CP.defrRet   = PVFBx.defrRet - PVFNC.EAN.CP.defrRet
+         PVFNCx.EAN.CP.defrRet = NCx.EAN.CP.defrRet * axrs,
+         ALx.EAN.CP.defrRet   = PVFBx.defrRet - PVFNCx.EAN.CP.defrRet
   ) 
   
 # x <- liab_active %>% filter(start_year == 2017, ea == 20) %>% select(start_year, ea, age, gx.v, Bx.v, TCx.v, PVFBx.v,  NCx.EAN.CP.v, ALx.EAN.CD.v, px_r.vben_m, ax.terms, qxd)
@@ -621,13 +622,13 @@ liab_active %<>%
 
           # NC and AL of EAN.CD
           NCx.EAN.CD.disbRet = ifelse(age < max_retAge, PVFBx.disbRet[age == min(age)]/ayx[age == max_retAge], 0),
-  				PVFNC.EAN.CD.disbRet =  NCx.EAN.CD.disbRet * axR,
-  				ALx.EAN.CD.disbRet = PVFBx.disbRet - PVFNC.EAN.CD.disbRet,
+  				PVFNCx.EAN.CD.disbRet =  NCx.EAN.CD.disbRet * axR,
+  				ALx.EAN.CD.disbRet = PVFBx.disbRet - PVFNCx.EAN.CD.disbRet,
 
           # NC and AL of EAN.CP
           NCx.EAN.CP.disbRet   = ifelse(age < max_retAge, sx * PVFBx.disbRet[age == min(age)]/(sx[age == min(age)] * ayxs[age == max_retAge]), 0),
-  				PVFNC.EAN.CP.disbRet = NCx.EAN.CP.disbRet * axRs,
-          ALx.EAN.CP.disbRet   = PVFBx.disbRet - PVFNC.EAN.CP.disbRet
+  				PVFNCx.EAN.CP.disbRet = NCx.EAN.CP.disbRet * axRs,
+          ALx.EAN.CP.disbRet   = PVFBx.disbRet - PVFNCx.EAN.CP.disbRet
   )
 
 # liab_active %>% filter(start_year == 2016, ea == 20) %>% 
@@ -779,13 +780,13 @@ liab_active %<>%
 					## Under EAN methods, costs are spread up to r.max
 					# NC and AL of EAN.CD
 					NCx.EAN.CD.death = ifelse(age < max_retAge, PVFBx.death[age == min(age)]/ayx[age == max_retAge], 0),
-					PVFNC.EAN.CD.death =  NCx.EAN.CD.death * axR,
-					ALx.EAN.CD.death = PVFBx.death - PVFNC.EAN.CD.death,
+					PVFNCx.EAN.CD.death =  NCx.EAN.CD.death * axR,
+					ALx.EAN.CD.death = PVFBx.death - PVFNCx.EAN.CD.death,
 					
 					# NC and AL of EAN.CP
 					NCx.EAN.CP.death   = ifelse(age < max_retAge, sx * PVFBx.death[age == min(age)]/(sx[age == min(age)] * ayxs[age == max_retAge]), 0),
-					PVFNC.EAN.CP.death = NCx.EAN.CP.death * axRs,
-					ALx.EAN.CP.death   = PVFBx.death - PVFNC.EAN.CP.death
+					PVFNCx.EAN.CP.death = NCx.EAN.CP.death * axRs,
+					ALx.EAN.CP.death   = PVFBx.death - PVFNCx.EAN.CP.death
 	)
 cat("......DONE\n")
 
@@ -865,26 +866,26 @@ liab_active %<>% ungroup %>% select(start_year, year, ea, age, everything())
 # Choosing AL and NC variables corresponding to the chosen acturial method
 ALx.servRet.laca.method     <- paste0("ALx.", actuarial_method, ".servRet.laca")
 NCx.servRet.laca.method     <- paste0("NCx.", actuarial_method, ".servRet.laca")
-PVFNC.servRet.laca.method   <- paste0("PVFNC.", actuarial_method, ".servRet.laca")
+PVFNCx.servRet.laca.method   <- paste0("PVFNCx.", actuarial_method, ".servRet.laca")
 
 ALx.defrRet.method    <- paste0("ALx.",   actuarial_method, ".defrRet")
 NCx.defrRet.method    <- paste0("NCx.",   actuarial_method, ".defrRet")
-PVFNC.defrRet.method  <- paste0("PVFNC.", actuarial_method, ".defrRet")
+PVFNCx.defrRet.method  <- paste0("PVFNCx.", actuarial_method, ".defrRet")
 
 ALx.disbRet.method     <- paste0("ALx.",   actuarial_method, ".disbRet")
 NCx.disbRet.method     <- paste0("NCx.",   actuarial_method, ".disbRet")
-PVFNC.disbRet.method   <- paste0("PVFNC.", actuarial_method, ".disbRet")
+PVFNCx.disbRet.method   <- paste0("PVFNCx.", actuarial_method, ".disbRet")
 
 ALx.death.method   <- paste0("ALx.",   actuarial_method, ".death")
 NCx.death.method   <- paste0("NCx.",   actuarial_method, ".death")
-PVFNC.death.method <- paste0("PVFNC.", actuarial_method, ".death")
+PVFNCx.death.method <- paste0("PVFNCx.", actuarial_method, ".death")
 
 
 
-var.names <- c(ALx.servRet.laca.method,    NCx.servRet.laca.method,    PVFNC.servRet.laca.method,
-							 ALx.defrRet.method,       NCx.defrRet.method,       PVFNC.defrRet.method,
-               ALx.death.method,   NCx.death.method,   PVFNC.death.method,
-               ALx.disbRet.method, NCx.disbRet.method, PVFNC.disbRet.method,
+var.names <- c(ALx.servRet.laca.method, NCx.servRet.laca.method, PVFNCx.servRet.laca.method,
+							 ALx.defrRet.method,      NCx.defrRet.method,      PVFNCx.defrRet.method,
+               ALx.death.method,        NCx.death.method,        PVFNCx.death.method,
+               ALx.disbRet.method,      NCx.disbRet.method,      PVFNCx.disbRet.method,
                 
 							 "sx", 
 							 "EEC",
@@ -904,19 +905,20 @@ liab_active %<>%
   select(year, ea, age, one_of(var.names)) %>%
   rename("ALx.servRet.laca"   = ALx.servRet.laca.method,  
   			 "NCx.servRet.laca"   = NCx.servRet.laca.method,  
-  			 "PVFNC.servRet.laca" = PVFNC.servRet.laca.method, 
+  			 "PVFNCx.servRet.laca" = PVFNCx.servRet.laca.method, 
           
   			 "ALx.defrRet"      = ALx.defrRet.method,     
   			 "NCx.defrRet"      = NCx.defrRet.method,     
-  			 "PVFNC.defrRet"    = PVFNC.defrRet.method,
-          
+  			 "PVFNCx.defrRet" = PVFNCx.defrRet.method, 
+  			 
+  			 
   			 "ALx.death"  = ALx.death.method, 
   			 "NCx.death"  = NCx.death.method, 
-  			 "PVFNC.death"= PVFNC.death.method,
+  			 "PVFNCx.death"= PVFNCx.death.method,
           
   			 "ALx.disbRet"   = ALx.disbRet.method,  
   			 "NCx.disbRet"   = NCx.disbRet.method,  
-  			 "PVFNC.disbRet" = PVFNC.disbRet.method
+  			 "PVFNCx.disbRet" = PVFNCx.disbRet.method
           )   # Note that dplyr::rename_ is used. 
 
 

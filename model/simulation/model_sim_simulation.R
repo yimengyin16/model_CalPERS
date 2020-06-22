@@ -1,45 +1,26 @@
 # This script conducts the simulation of the finance of the plan
 
 
-run_sim <- function(
-                    AggLiab_,
-                    #PR.Tiers_ = PR.Tiers,
-                    #DC.Tiers_ = DC.Tiers,
-                    i.r_ = i.r,
-                    #i.r_geoReturn_ = i.r_geoReturn,
-                    init_amort_raw_ = init_amort_raw, # amount.annual, year.remaining 
-                    init_unrecReturns.unadj_ = init_unrecReturns.unadj,
-                    paramlist_ = paramlist,
+run_sim <- function(i.r_ = i.r,
+                    sim_paramlist_ = sim_paramlist,
                     Global_paramlist_ = Global_paramlist){
 
   # Run the section below when developing new features.
   
-     ## Single-tier mode
-     # # tier_select_ =  "t4a" #  Tier_select
-     # i.r_ = i.r
-     # #i.r_geoReturn_ = i.r_geoReturn
-     # AggLiab_        = AggLiab
-     # #PR.Tiers_ = PR.Tiers
-     # init_amort_raw_ = init_amort_raw
-     # init_unrecReturns.unadj_ = init_unrecReturns.unadj
-     # paramlist_      = paramlist
-     # Global_paramlist_ = Global_paramlist
-  
-     ## Multi-tier mode
-     # # Tier_select_ =  "sumTiers" #  Tier_select
-     # # i.r_geoReturn_ = i.r_geoReturn
-     # # PR.Tiers_ = PR.Tiers
-     # AggLiab_        = AggLiab.sumTiers
-     # i.r_ = i.r
-     # init_amort_raw_ = init_amort_raw
-     # init_unrecReturns.unadj_ = init_unrecReturns.unadj
-     # paramlist_      = paramlist
-     # Global_paramlist_ = Global_paramlist
-  
+  # i.r_ = i.r
+  # sim_paramlist_ = sim_paramlist
+  # Global_paramlist_ = Global_paramlist
 
   assign_parmsList(Global_paramlist_, envir = environment())
-  assign_parmsList(paramlist_,        envir = environment())
-
+  assign_parmsList(sim_paramlist_,    envir = environment())
+  
+  
+  valData <- readRDS(paste0(dir_val, "val_", sim_paramlist_$val_name, ".rds"))
+  # note that "dir_val" is defined outside the function
+  tn <- "miscAll" # this will be replaced by the tag for aggregate results, like "agg" 
+ 
+  
+   
   #*****************************************************************************
   #                       Defining variables in simulation ####
   #***************************************************************************** 
@@ -140,16 +121,11 @@ run_sim <- function(
     			 
     			 ## Additional/plan specific variables
 
-    			 # Aggregate cost method
-    			 NCrate_AGG      = 0,  # Total ADC rate (including PVFEEC)
-    			 ERCrate_AGG_0   = 0,  # original ERC rate, can be negative (ER portion of ADC) 
-    			 ERCrate_AGG_ADC = 0,  # max of 0 and the original rate (non-negative ER rate) 
-    			 ERC_AGG_ADC     = 0,  # non-negative ERC 
-    			 ERC_AGG         = 0   # non-negative ERC afer applying ERC restrictions
+
     			    			 )
   # penSim0 <- as.list(penSim0)
   
- 
+  valData$aggLiab[[tn]]$active
 
   #*****************************************************************************
   #                      Defining variables in simulation  ####
@@ -157,80 +133,90 @@ run_sim <- function(
  
   # AL(j)
    # AL for active members 
-  penSim0$AL.act.laca    <- AggLiab_$active[, "ALx.laca.yearsum"]
-  penSim0$AL.act.v       <- AggLiab_$active[, "ALx.v.yearsum"]
-  penSim0$AL.act.disbRet <- AggLiab_$active[, "ALx.disbRet.yearsum"]
-  penSim0$AL.act.death   <- AggLiab_$active[, "ALx.death.yearsum"]
-  penSim0$AL.act         <-  with(penSim0, AL.act.laca + AL.act.v + penSim0$AL.act.disbRet + penSim0$AL.act.death)
+  penSim0$AL.active.servRet <- valData$aggLiab[[tn]]$active[, "ALx.servRet.laca"]
+  penSim0$AL.active.defrRet <- valData$aggLiab[[tn]]$active[, "ALx.defrRet"]
+  penSim0$AL.active.disbRet <- valData$aggLiab[[tn]]$active[, "ALx.disbRet"]
+  penSim0$AL.active.death   <- valData$aggLiab[[tn]]$active[, "ALx.death"]
+  penSim0$AL.active <-  
+    with(penSim0, AL.active.servRet + 
+                  AL.active.defrRet + 
+                  AL.active.disbRet + 
+                  AL.active.death)
   
    # AL for members in pay status
-  penSim0$AL.la     <- AggLiab_$la[,   "ALx.la.yearsum"]
+  penSim0$AL.servRet    <- valData$aggLiab[[tn]]$servRet.la[,   "ALx.servRet.la"]
+  penSim0$AL.defrRet    <- valData$aggLiab[[tn]]$defrRet[, "ALx.defrRet"]
+  penSim0$AL.disbRet    <- valData$aggLiab[[tn]]$disbRet[, "ALx.disbRet"]
+  penSim0$AL.death      <- valData$aggLiab[[tn]]$death[,   "ALx.death"]
   #penSim0$AL.ca    <- AggLiab_$ca[,   "liab.ca.yearsum"]
-  penSim0$AL.term   <- AggLiab_$term[, "ALx.v.yearsum"]
-  penSim0$AL.disbRet<- AggLiab_$disbRet[, "ALx.disbRet.yearsum"]
-  penSim0$AL.death  <- AggLiab_$death[,"ALx.death.yearsum"]
-  penSim0$AL.inact  <- with(penSim0, AL.la + AL.term + AL.disbRet + AL.death)
-  
-  penSim0$AL        <- with(penSim0, AL.act + AL.inact)
+  penSim0$AL.nonactive <- 
+    with(penSim0, AL.servRet + 
+                  AL.defrRet + 
+                  AL.disbRet + 
+                  AL.death)
+   # Total AL
+  penSim0$AL <- with(penSim0, AL.active + AL.nonactive)
   
   # NC(j)
-  penSim0$NC.laca    <- AggLiab_$active[, "NCx.laca.yearsum"]
-  penSim0$NC.v       <- AggLiab_$active[, "NCx.v.yearsum"]
-  penSim0$NC.disbRet <- AggLiab_$active[, "NCx.disbRet.yearsum"]
-  penSim0$NC.death   <- AggLiab_$active[, "NCx.death.yearsum"]
+  penSim0$NC.servRet <- valData$aggLiab[[tn]]$active[, "NCx.servRet.laca"]
+  penSim0$NC.defrRet <- valData$aggLiab[[tn]]$active[, "NCx.defrRet"]
+  penSim0$NC.disbRet <- valData$aggLiab[[tn]]$active[, "NCx.disbRet"]
+  penSim0$NC.death   <- valData$aggLiab[[tn]]$active[, "NCx.death"]
   
-  penSim0$NC         <- with(penSim0, NC.laca + NC.v + NC.disbRet + NC.death)
+  penSim0$NC         <- with(penSim0, NC.servRet + NC.defrRet + NC.disbRet + NC.death)
   
   # PVFB(j)
-  penSim0$PVFB.laca    <- AggLiab_$active[, "PVFBx.laca.yearsum"]
-  penSim0$PVFB.v       <- AggLiab_$active[, "PVFBx.v.yearsum"]
-  penSim0$PVFB.disbRet <- AggLiab_$active[, "PVFBx.disbRet.yearsum"] 
-  penSim0$PVFB.death   <- AggLiab_$active[, "PVFBx.death.yearsum"]
+  penSim0$PVFB.active.servRet <- valData$aggLiab[[tn]]$active[, "PVFBx.servRet.laca"]
+  penSim0$PVFB.active.defrRet <- valData$aggLiab[[tn]]$active[, "PVFBx.defrRet"]
+  penSim0$PVFB.active.disbRet <- valData$aggLiab[[tn]]$active[, "PVFBx.disbRet"] 
+  penSim0$PVFB.active.death   <- valData$aggLiab[[tn]]$active[, "PVFBx.death"]
 
-  penSim0$PVFB.act     <-  with(penSim0, PVFB.laca + PVFB.v + PVFB.disbRet + PVFB.death) 
-  penSim0$PVFB.tot     <-  with(penSim0, PVFB.act + AL.inact) 
+  penSim0$PVFB.active    <- with(penSim0, PVFB.active.servRet + PVFB.active.defrRet + PVFB.active.disbRet + PVFB.active.death) 
+  penSim0$PVFB.nonactive <- with(penSim0, AL.nonactive)
+  penSim0$PVFB           <- with(penSim0, PVFB.active + PVFB.nonactive) 
   
   # Note this is the total PVFB for actives. PVFB for retirees/beneficiaries are the same as AL.
   
   # PVFNC(j)
-  penSim0$PVFNC.laca    <- AggLiab_$active[, "PVFNC.laca.yearsum"]
-  penSim0$PVFNC.v       <- AggLiab_$active[, "PVFNC.v.yearsum"]
-  penSim0$PVFNC.disbRet <- AggLiab_$active[, "PVFNC.disbRet.yearsum"] 
-  penSim0$PVFNC.death   <- AggLiab_$active[, "PVFNC.death.yearsum"]
+  penSim0$PVFNC.servRet   <- valData$aggLiab[[tn]]$active[, "PVFNCx.servRet.laca"]
+  penSim0$PVFNC.defrRet   <- valData$aggLiab[[tn]]$active[, "PVFNCx.defrRet"]
+  penSim0$PVFNC.disbRet   <- valData$aggLiab[[tn]]$active[, "PVFNCx.disbRet"] 
+  penSim0$PVFNC.death     <- valData$aggLiab[[tn]]$active[, "PVFNCx.death"]
  
-  penSim0$PVFNC         <-  with(penSim0, PVFNC.laca + PVFNC.v + PVFNC.disbRet + PVFNC.death)
+  penSim0$PVFNC <-  with(penSim0, PVFNC.servRet + PVFNC.defrRet + PVFNC.disbRet + PVFNC.death)
   
   # B(j)
-  penSim0$B.la      <- AggLiab_$la[, "B.la.yearsum"]
-  # penSim0$B.ca    <- AggLiab_$ca[, "B.ca.yearsum"]
-  penSim0$B.v       <- AggLiab_$term[, "B.v.yearsum"]
-  penSim0$B.death   <- AggLiab_$death[, "B.death.yearsum"]
-  penSim0$B.disbRet <- AggLiab_$disbRet[, "B.disbRet.yearsum"]
+  penSim0$B.servRet <- valData$aggLiab[[tn]]$servRet.la[, "B.servRet.la"]
+  penSim0$B.defrRet <- valData$aggLiab[[tn]]$defrRet[, "B.defrRet"]
+  penSim0$B.disbRet <- valData$aggLiab[[tn]]$disbRet[, "B.disbRet"]
+  penSim0$B.death   <- valData$aggLiab[[tn]]$death[,   "B.death"]
   
-  penSim0$B          <- with(penSim0, B.la + B.v + B.disbRet + B.death) 
+  # penSim0$B.ca    <- valData$aggLiab[[tn]]$ca[, "B.ca"]
+  
+  penSim0$B          <- with(penSim0, B.servRet + B.defrRet + B.disbRet + B.death) 
   
   # PR(j)
-  penSim0$PR  <- AggLiab_$active[, "PR.yearsum"]
+  penSim0$PR  <- valData$aggLiab[[tn]]$active[, "PR"]
   
   # EEC(j)
-  penSim0$EEC <- AggLiab_$active[, "EEC.yearsum"]
+  penSim0$EEC <- valData$aggLiab[[tn]]$active[, "EEC"]
   
   # PVFEEC(j)
-  penSim0$PVFEEC <- AggLiab_$active[, "PVFEEC.yearsum"]
+  penSim0$PVFEEC <- valData$aggLiab[[tn]]$active[, "PVFEEC"]
 
   # PVFS(j)
-  penSim0$PVFS <- AggLiab_$active[, "PVFSx.yearsum"]
+  penSim0$PVFS <- valData$aggLiab[[tn]]$active[, "PVFSx"]
  
-  # nactives, nretirees, nterms
-  penSim0$nactives   <- AggLiab_$active[, "nactives"]
-  penSim0$nla        <- AggLiab_$la[, "nla"]
-  #penSim0$n.ca.R1   <- AggLiab_$ca[, "n.R1"]
-  #penSim0$n.ca.R0S1 <- AggLiab_$ca[, "n.R0S1"]
-  penSim0$nterms     <- AggLiab_$term[, "nterms"]
-  penSim0$ndeathBen  <- AggLiab_$death[, "ndeathBen"]
-  penSim0$ndisbRet   <- AggLiab_$disbRet[,  "ndisbRet"]
-  #penSim0$ndisb.ca.R0S1 <- AggLiab_$disb.ca[,  "n.disb.R0S1"]
-
+  # Number of members
+  penSim0$n_actives  <- valData$aggLiab[[tn]]$active[, "nactives"]
+  penSim0$n_servRet <- valData$aggLiab[[tn]]$servRet.la[, "n_servRet.la"]
+  penSim0$n_defrRet <- valData$aggLiab[[tn]]$defrRet[, "n_defrRet.vest"]
+  penSim0$n_disbRet <- valData$aggLiab[[tn]]$disbRet[, "n_disbRet"]
+  penSim0$n_deathBen <- valData$aggLiab[[tn]]$death[, "n_deathBen"]
+  
+  #penSim0$ndisb.ca.R0S1 <- valData$aggLiab[[tn]]$disb.ca[,  "n.disb.R0S1"]
+  #penSim0$n.ca.R1   <- valData$aggLiab[[tn]]$ca[, "n.R1"]
+  #penSim0$n.ca.R0S1 <- valData$aggLiab[[tn]]$ca[, "n.R0S1"]
   
   # Convert penSim0 to a list when all preps are done.
   # It is faster to extract elements from lists than from frame data frames.
@@ -252,13 +238,13 @@ run_sim <- function(
    #          Column sums give the total amortization payments. 
   
   # Set up the matrix for SC starting from year 1
-  m.max     <- max(init_amort_raw_$year.remaining, m) # max number of rows and columns needed
+  m.max     <- max(valData$init_amort_raw$year.remaining, m) # max number of rows and columns needed
   SC_amort0 <- matrix(0, nyear + m.max, nyear + m.max)
   # SC_amort0
   
   
   # Amortization payment amounts for losses/gains occured piror to year 1 (from plan docs). Set up the matrix. 
-  SC_amort.init <- matrix(0, nrow(init_amort_raw_), nyear + m.max)
+  SC_amort.init <- matrix(0, nrow(valData$init_amort_raw), nyear + m.max)
  
    
   # Adjustment factor for initial amortization payments 
@@ -285,20 +271,20 @@ run_sim <- function(
    #        Need to check the document
    # Source of the demoninator: AV2016lag page n14, sum of outstanding amortization basis
  
-   # NYSERS:
-   factor.initAmort <- UAAL.year1.model / 1  
+   # CalPERS:
+   factor.initAmort <- UAAL.year1.model / sum(valData$init_amort_raw$balance)
    
    
    if(useAVamort){
    	SC_amort.init.list <- mapply(amort_LG, 
-   															 p = init_amort_raw_$balance * factor.initAmort , 
-   															 m = init_amort_raw_$year.remaining, 
-   															 method = init_amort_raw_$amort.method,
-   															 skipY1 = init_amort_raw_$skipY1,
+   															 p = valData$init_amort_raw$balance * factor.initAmort , 
+   															 m = valData$init_amort_raw$year.remaining, 
+   															 method = valData$init_amort_raw$amort.method,
+   															 skipY1 = valData$init_amort_raw$skipY1,
    															 MoreArgs = list(i = i, g = salgrowth_amort, end = FALSE), SIMPLIFY = F)
    	
    	for(j in 1:nrow(SC_amort.init)){
-   		SC_amort.init[j, 1:init_amort_raw_$year.remaining[j]] <- SC_amort.init.list[[j]]
+   		SC_amort.init[j, 1:valData$init_amort_raw$year.remaining[j]] <- SC_amort.init.list[[j]]
    	}
    }
   # SC_amort.init
@@ -341,10 +327,11 @@ run_sim <- function(
   
   ## Adjusting initil unrecognized returns for the MA-AA difference in the model
 
-  init_unrecReturns.adj <-  mutate(init_unrecReturns.unadj_, 
+  init_unrecReturns.adj <-  mutate(valData$init_unrecReturns.unadj,
   																 DeferredReturn = DeferredReturn * (MA.year1.model -  AA.year1.model)/sum(DeferredReturn),
   																 DeferredReturn.annualTot = sum(DeferredReturn) - cumsum(DeferredReturn) # Initial unrecognized return to be subtracted from AA in each year
-  )
+                                   ) %>% 
+                            mutate(across(.fns = na2zero))
   # init_unrecReturns.adj
   
   
@@ -367,12 +354,12 @@ run_sim <- function(
     penSim[["i.r"]] <- i.r_[, as.character(k)]
     # penSim[["i.r_geoReturn"]] <- i.r_geoReturn_[, as.character(k)]
     
-    source("Functions.R")
+    source("functions.R")
     
     for (j in 1:nyear){
         
-    	  # it_j <- iterators::iter(1:nyear)   	
-        # j    <- iterators::nextElem(it_j); j
+    # it_j <- iterators::iter(1:nyear)
+    # j    <- iterators::nextElem(it_j); j
       
     	
     	#***********************************
@@ -425,11 +412,6 @@ run_sim <- function(
     	
     	if((init_AA_type %in% c("AL_pct", "AA0")) & useAVunrecReturn & k != -1 ){
        
-        # # Adjusting initila unrecognized returns for the MA-AA difference in the model
-        # init_unrecReturns.adj <-  mutate(init_unrecReturns.unadj_, DeferredReturn = DeferredReturn * (penSim$MA[1] - penSim$AA[1])/sum(DeferredReturn),
-        #                                                            DeferredReturn.annualTot = sum(DeferredReturn) - cumsum(DeferredReturn) # Initial unrecognized return to be subtracted from AA in each year
-        #                                  )
-
         # Adjust AA for inital unrecognized returns
         if((j - 1 + init_year) %in% init_unrecReturns.adj$year) penSim$AA[j] <- penSim$AA[j] - with(init_unrecReturns.adj, DeferredReturn.annualTot[year == (j - 1 + init_year)])
       }
@@ -473,7 +455,7 @@ run_sim <- function(
       
       # Amortize LG(j)
       if(j > ifelse(useAVamort, 1, 0)){
-        # if useAVamort is TRUE, AV amort will be used for j = 1, not the one calcuated from the model. This may cause inconsistency in the model results(?)
+        # if useAVamort is TRUE, AV amort will be used for j = 1, not the one calcuated from the model.
         if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method, skipY1 = FALSE)
         }
       
@@ -533,49 +515,21 @@ run_sim <- function(
       
      
       
-      #************************************************************************
-      #   3b. ADC, ERC, and total contribution with Aggregate cost method   **
-      #************************************************************************
-      
-      # It is assumed that 
-      #  - EEC rates are fixed
-      #  - ERC rates cannot be negative 
-      
-      
-      penSim$NCrate_AGG[j]      <-  with(penSim, (PVFB.tot[j] - AA[j])/PVFS[j])
-      penSim$ERCrate_AGG_0[j]   <-  with(penSim, (PVFB.tot[j] - PVFEEC[j] - AA[j])/PVFS[j])   # original ERC rate, can be negative 
-      penSim$ERCrate_AGG_ADC[j] <- max(0, penSim$ERCrate_AGG_0[j])                      # max of 0 and the original rate 
-      
-      penSim$ERC_AGG_ADC[j] <- with(penSim, ERCrate_AGG_ADC[j] * PR[j]) # Actuarially determined ERC amount
-      
-      # ERC
-      penSim$ERC_AGG[j] <- switch(ConPolicy,
-                                  ADC     = with(penSim, ERC_AGG_ADC[j]),                          # Full ADC
-                                  ADC_cap = with(penSim, min(ERC_AGG_ADC[j], PR_pct_cap * PR[j])),   # ADC with cap. Cap is a percent of payroll 
-                                  Fixed   = with(penSim, PR_pct_fixed * PR[j])                  # Fixed percent of payroll
-      ) 
-      
-      
+    
       #************************************************************************
       #   3c. Choose which cost method to apply   **
       #************************************************************************
       
-      if(cost_method == "EAN"){
+      #if(cost_method == "EAN"){
       # C(j)
       penSim$C[j] <- with(penSim, EEC[j] + ERC[j])
       
       # C(j) - ADC(j)
       penSim$C_ADC[j] <- with(penSim, C[j] - ADC[j])
-      }
+      # }
   
       
-      if(cost_method == "AGG"){
-        # C(j)
-        penSim$C[j] <- with(penSim, EEC[j] + ERC_AGG[j])
-        
-        # C(j) - ADC(j)
-        penSim$C_ADC[j] <- with(penSim, C[j] - ERC_AGG_ADC[j])
-      }
+    
       
       
       
@@ -615,11 +569,12 @@ run_sim <- function(
   penSim_results <- bind_rows(penSim_results) %>% 
     mutate(
     	     ## Standard output variables
-    	     sim     = rep(-1:nsim, each = nyear),
-           runname = runname,
-           tier_Mode = tier_Mode,
-    			 singleTier_select = singleTier_select,
-    			 return_scenario = return_scenario, 
+    	     sim      = rep(-1:nsim, each = nyear),
+           sim_name = sim_paramlist_$sim_name,
+    	     val_name = sim_paramlist_$val_name,
+           # tier_Mode = tier_Mode,
+    			 # singleTier_select = singleTier_select,
+    			 # return_scenario = return_scenario, 
            
     			 FR_AA   = 100 * AA / exp(log(AL)),
            FR_MA   = 100 * MA / exp(log(AL)),
@@ -627,10 +582,8 @@ run_sim <- function(
     			 NC_PR   = 100 * NC / PR,
     			 SC_PR   = 100 * SC / PR, 
            
-    			 ERC_PR_indiv  = 100 * ERC     / PR,
-    			 ERC_PR_AGG    = 100  * ERC_AGG / PR,
-    			 
-           EEC_PR  = 100 * EEC / PR,
+    			 ERC_PR  = 100 * ERC     / PR,
+    			 EEC_PR  = 100 * EEC / PR,
            C_PR    = 100 * C / PR,
            B_PR    = 100 * B / PR,
     			 
@@ -656,7 +609,7 @@ run_sim <- function(
     			 # NC.laca_PR    = 100 * NC.laca / PR,
     			 # NC.v_PR   = 100 * NC.v / PR
            ) %>%
-    select(runname, sim, year, everything())
+    relocate(sim_name, val_name, sim, year)
   
   return(penSim_results)
 }

@@ -11,9 +11,17 @@ val_name <- "Dev_2tiers"
 #*******************************************************************************
 ## File path of the run control file
 
+# Path to run control file
 dir_runControl <- "model/"
 fn_runControl  <- "RunControl.xlsx"
 filePath_runControl <- paste0(dir_runControl, fn_runControl)
+
+# Path to amortization and asset smoothing info
+dir_planInfo <- "inputs/data_proc/"
+filePath_planInfo <- paste0(dir_planInfo, "Data_CalPERS_planInfo_AV2018.RData")
+
+# Output folder  
+dir_outputs <- "model/valuation/outputs_val/"
 
 
 ## Import global parameters
@@ -103,92 +111,94 @@ invisible(gc())
 source("model/valuation/model_val_indivLiab.R")
 
 indivLiab <- list()
-indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLab(tierData_miscAll)
+indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLiab(tierData_miscAll)
 
 
 
 #*******************************************************************************
-#     Aggregate actuarial liabilities, normal costs and benenfits        ####
+#     Aggregate actuarial liabilities, normal costs and benefits        ####
 #*******************************************************************************
+invisible(gc())
 source("model/valuation/model_val_aggLiab.R")
 
+aggLiab <- list()
+aggLiab[[val_paramlist$tier_include[1]]] <- get_aggLiab(pop, indivLiab)
 
 
 
 
-
-
-
-
-
-invisible(gc())
-
-if(paramlist$tier_Mode == "singleTier"){
-	AggLiab_allTiers <- get_AggLiab(paramlist$singleTier_select,
-																	liab_allTiers,
-																	pop_allTiers)
-}
-
-if(paramlist$tier_Mode == "multiTier"){
-	AggLiab_nt6 <- get_AggLiab("nt6",
-														 liab_nt6,
-														 pop_multiTier$pop_nt6)
-
-	AggLiab_t6 <- get_AggLiab("t6",
-														 liab_t6,
-														 pop_multiTier$pop_t6)
-
-	AggLiab.sumTiers <-
-		get_AggLiab_sumTiers(AggLiab_nt6, AggLiab_t6)
-
-
-}
-
-if(paramlist$tier_Mode == "singleTier") AggLiab <- AggLiab_allTiers
-if(paramlist$tier_Mode == "multiTier")  AggLiab <- AggLiab.sumTiers
-
-AggLiab$active %>% as.data.frame %>% select(year, ALx.actAll.yearsum, NCx.actAll.yearsum, PVFBx.laca.yearsum, PVFBx.actAll.yearsum)
-
+# 
+# 	AggLiab.sumTiers <-
+# 		get_AggLiab_sumTiers(AggLiab_nt6, AggLiab_t6)
+# 
 
 
 #*******************************************************************************
-#   Simplification: Initial vested and inactives who are not in pay status  
+#    plan information associated with this valuation        ####
 #*******************************************************************************
 
-# For initial PVB of terminated vested members 
-#  - no corresponding demographic data 
-#  - PVB = AL
+load(filePath_planInfo) # %>% print
 
-# - Assume the PVFB for initial vested members are paid up through out the next 50 years. 
-# - ALs and Bs of initial terminated vested and inactive members will be added to ALx.v and B.v. 
-# - Based on method used in PSERS model. 
+init_amort_raw_val <- init_amort_raw %>% 
+  filter(grp %in% c("misc", "inds") )
 
-# paramlist$AL_defrRet_0 <- 3517847922
+init_unrecReturns.unadj_val <- init_unrecReturns.unadj
 
-if (paramlist$estInitTerm){
-	AL.init.v <-  paramlist$AL_defrRet_0 
-	
-	df_init.vested <- data.frame(
-		year = 1:51 + (Global_paramlist$init_year - 1),
-		#B.init.v.yearsum = c(0, amort_cd(AL.init.v, paramlist$i, 50, TRUE))) %>% 
-		B.init.v.yearsum = c(0, amort_cp(AL.init.v, paramlist$i, 50, paramlist$salgrowth_amort, TRUE))) %>% 
-		mutate(ALx.init.v.yearsum = ifelse(year == Global_paramlist$init_year, AL.init.v, 0))
+#*******************************************************************************
+#  Save outputs          ####
+#*******************************************************************************
 
-	for(i_v in 2:nrow(df_init.vested)){
-		df_init.vested$ALx.init.v.yearsum[i_v] <- 
-			with(df_init.vested, (ALx.init.v.yearsum[i_v - 1] - B.init.v.yearsum[i_v - 1]) * (1 + paramlist$i))
-	}
-	
-	# df_init.vested
-	
-	AggLiab$term %<>% 
-		as.data.frame() %>%
-		left_join(df_init.vested, by = "year") %>%
-		mutate_all(funs(na2zero)) %>%
-		mutate(ALx.v.yearsum = ALx.v.yearsum + ALx.init.v.yearsum,
-					 B.v.yearsum   = B.v.yearsum + B.init.v.yearsum) %>%
-		as.matrix
-}
+saveRDS(
+    list(
+      aggLiab = aggLiab,
+      indivLaib = indivLiab,
+      pop = pop,
+      init_amort_raw = init_amort_raw_val,
+      init_unrecReturns.unadj = init_unrecReturns.unadj_val
+    ),
+  file = paste0(dir_outputs, "val_", val_name, ".rds")
+)
 
+
+
+# #*******************************************************************************
+# #   Simplification: Initial vested and inactives who are not in pay status  
+# #*******************************************************************************
+# 
+# # For initial PVB of terminated vested members 
+# #  - no corresponding demographic data 
+# #  - PVB = AL
+# 
+# # - Assume the PVFB for initial vested members are paid up through out the next 50 years. 
+# # - ALs and Bs of initial terminated vested and inactive members will be added to ALx.v and B.v. 
+# # - Based on method used in PSERS model. 
+# 
+# # paramlist$AL_defrRet_0 <- 3517847922
+# 
+# if (paramlist$estInitTerm){
+# 	AL.init.v <-  paramlist$AL_defrRet_0 
+# 	
+# 	df_init.vested <- data.frame(
+# 		year = 1:51 + (Global_paramlist$init_year - 1),
+# 		#B.init.v.yearsum = c(0, amort_cd(AL.init.v, paramlist$i, 50, TRUE))) %>% 
+# 		B.init.v.yearsum = c(0, amort_cp(AL.init.v, paramlist$i, 50, paramlist$salgrowth_amort, TRUE))) %>% 
+# 		mutate(ALx.init.v.yearsum = ifelse(year == Global_paramlist$init_year, AL.init.v, 0))
+# 
+# 	for(i_v in 2:nrow(df_init.vested)){
+# 		df_init.vested$ALx.init.v.yearsum[i_v] <- 
+# 			with(df_init.vested, (ALx.init.v.yearsum[i_v - 1] - B.init.v.yearsum[i_v - 1]) * (1 + paramlist$i))
+# 	}
+# 	
+# 	# df_init.vested
+# 	
+# 	AggLiab$term %<>% 
+# 		as.data.frame() %>%
+# 		left_join(df_init.vested, by = "year") %>%
+# 		mutate_all(funs(na2zero)) %>%
+# 		mutate(ALx.v.yearsum = ALx.v.yearsum + ALx.init.v.yearsum,
+# 					 B.v.yearsum   = B.v.yearsum + B.init.v.yearsum) %>%
+# 		as.matrix
+# }
+# 
 
 

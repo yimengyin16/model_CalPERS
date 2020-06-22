@@ -1,24 +1,23 @@
 
 # This module create investment return series. 
 
-gen_returns <- function( paramlist_ = paramlist,
-                         Global_paramlist_ = Global_paramlist,
-                         returnScenarios_ = returnScenarios
+gen_returns <- function( sim_paramlist_ = sim_paramlist,
+                         Global_paramlist_ = Global_paramlist
+                         # returnScenarios_ = returnScenarios
                          ){
    
-## Unquote for development
-  # paramlist_ = paramlist
+  ## Unquote for development
+  # sim_paramlist_ = sim_paramlist
   # Global_paramlist_ = Global_paramlist
   # returnScenarios_ = returnScenarios
-
+  
   
   assign_parmsList(Global_paramlist_, envir = environment())
-  assign_parmsList(paramlist_,        envir = environment())
-  
+  assign_parmsList(sim_paramlist_,    envir = environment())
 
 ## Constant return distributions defined by mean and sd
   if(return_type == "simple"){
-    set.seed(paramlist$seed)
+    set.seed(sim_paramlist$seed)
     i.r <- matrix(rnorm(nyear*nsim, ir.mean, ir.sd), nyear, nsim)
     i.r <- cbind(rep(ir.mean - ir.sd^2/2, nyear), i.r) # add deterministic returns
     colnames(i.r) <- 0:nsim
