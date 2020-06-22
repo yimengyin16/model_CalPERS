@@ -39,4 +39,7 @@ results*/**/*.RData
 outputs*/**/*.RData
 template*/**/*.*
 
+model*/**/*.RData
+model*/**/*.rds
+
 ~$*
