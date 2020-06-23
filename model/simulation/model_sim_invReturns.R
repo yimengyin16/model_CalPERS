@@ -40,7 +40,14 @@ gen_returns <- function( sim_paramlist_ = sim_paramlist,
 
 ## T
 i.r <- cbind(rep(i, nyear), i.r)  # add constant return that equals discount rate for checking model consistency 
-colnames(i.r) <- c(-1:nsim)
+
+i.shock <- i.r[, 2]
+i.shock[3:6] <- c(-0.24, 0.12, 0.12, 0.12) 
+i.r <- cbind(i.shock, i.r) 
+
+colnames(i.r) <- c(-2:nsim)
+
+
 
 return(i.r)
 }

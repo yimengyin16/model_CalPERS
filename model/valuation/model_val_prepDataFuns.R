@@ -420,6 +420,12 @@ apply_decImprovements <- function(tierData,
     colwise(na2zero)(.) %>% 
     ungroup
   
+  ## Calibration
+  decrements_expanded %<>%  
+    mutate(qxm.post = (1 + calib_qxm.post) * qxm.post)
+  
+  tierData$decrements_expanded <- decrements_expanded
+  
   return(tierData)
   
 }
@@ -436,9 +442,9 @@ adj_initMembers <- function(tierData,
                             val_paramlist_    =  val_paramlist,
                             Global_paramlist_ =  Global_paramlist){
   # 
-  #   tierData          <- tierData_miscAll
-  #   val_paramlist_    <-  val_paramlist
-  #   Global_paramlist_ <-  Global_paramlist
+    # tierData          <- tierData_miscAll
+    # val_paramlist_    <-  val_paramlist
+    # Global_paramlist_ <-  Global_paramlist
   
   assign_parmsList(Global_paramlist_, envir = environment())
   assign_parmsList(val_paramlist_,    envir = environment())   
@@ -455,14 +461,17 @@ adj_initMembers <- function(tierData,
     mutate(year       = init_year,
            ea         = min_age,
            age_servRet= age,
-           start_year = year - (age - ea)) %>% 
+           start_year = year - (age - ea),
+           benefit_servRet = (1 + B_adjust) * benefit_servRet
+           ) %>% 
     relocate(grp, start_year, year, ea, age, age_servRet)
   
   tierData$df_n_disbRet %<>% 
     mutate(year       = init_year,
            ea         = min_age,
            age_disbRet= age,
-           start_year = year - (age - ea)) %>% 
+           start_year = year - (age - ea),
+           benefit_disbRet = (1 + B_adjust) * benefit_disbRet) %>% 
     relocate(grp, start_year, year, ea, age, age_disbRet)
   
   

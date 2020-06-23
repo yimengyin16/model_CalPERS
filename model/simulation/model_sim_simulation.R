@@ -252,7 +252,7 @@ run_sim <- function(i.r_ = i.r,
       # WARNING: Does not work with "method 2" for AA.
 
    MA.year1.model <- switch(init_MA_type, 
-   									    MA = MA_0_DB,                         # Use preset value
+   									    MA0 = MA_0,                         # Use preset value
    									    AL = penSim0$AL[1],                   # Assume inital fund equals inital liability.
    									    AL_pct = penSim0$AL[1] * MA_0_pct) # Inital MA is a proportion of inital AL
    
@@ -343,7 +343,7 @@ run_sim <- function(i.r_ = i.r,
   cl <- makeCluster(ncore) 
   registerDoParallel(cl)
   
-  penSim_results <- foreach(k = -1:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
+  penSim_results <- foreach(k = -2:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
     # k <- 0
     # initialize
     penSim   <- penSim0
@@ -569,7 +569,7 @@ run_sim <- function(i.r_ = i.r,
   penSim_results <- bind_rows(penSim_results) %>% 
     mutate(
     	     ## Standard output variables
-    	     sim      = rep(-1:nsim, each = nyear),
+    	     sim      = rep(-2:nsim, each = nyear),
            sim_name = sim_paramlist_$sim_name,
     	     val_name = sim_paramlist_$val_name,
            # tier_Mode = tier_Mode,

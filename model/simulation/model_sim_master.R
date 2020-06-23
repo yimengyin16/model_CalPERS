@@ -2,8 +2,9 @@
 
 
 # Valuation name
+# rm(list = ls())
 
-
+source("libraries.R")
 
 #*******************************************************************************
 #                           ### Valuation parameters ####                      
@@ -64,8 +65,8 @@ dir_val <- "model/valuation/outputs_val/"
 source("model/simulation/model_sim_invReturns.R")
 sim_paramlist$seed <- 123
 i.r <- gen_returns()
-# i.r
-# i.r[1:5, 1:5]
+#i.r
+i.r[1:10, 1:5]
 
 
 #*******************************************************************************
@@ -115,9 +116,11 @@ saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name_run, ".rds"))
 
 # Display1 Basic examination
 var_display1 <- c("sim_name", "val_name", "sim", "year", 
-                  "FR_MA", "FR_AA", "MA", "AA", 
+                  "AL", "FR_MA",  "UAAL", "ERC", "ERC_PR",
+                  "MA",
                   "AL", 
                   "AL.active", "AL.nonactive",
+                  "AL.defrRet",
                   "PVFB",
                   "PVFB.active",
                   "cola_actual",
@@ -143,9 +146,17 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
 
 penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display1))  %>% print
 penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
-penSim_results %>% filter(sim == -1) %>% select(one_of(var_display1))  %>% print
+penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
 
 print(end_time  - start_time)
+
+
+
+
+penSim_results %>% filter(sim == 0, year == max(year)) %>% 
+  mutate(defr_pct = AL.defrRet/AL.active)
+
+
 
 
 

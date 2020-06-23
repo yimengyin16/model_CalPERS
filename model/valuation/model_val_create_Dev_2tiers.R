@@ -1,9 +1,8 @@
 # Actuarial valuation for PERF A with 2-tier simplification
 
+rm(list = ls())
 
-# Valuation name
-val_name_run <- "Dev_2tiers_bf2"
-
+source("libraries.R")
 
 
 #*******************************************************************************
@@ -31,9 +30,10 @@ Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>%
  
 ## Import valuation parameters
 val_paramlist <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) %>% 
-  filter(!is.na(val_name), val_name == val_name_run) %>% 
+  filter(!is.na(val_name), include == TRUE) %>% 
   as.list
 
+val_name_run <- val_paramlist$val_name
 
 
 ## Additinal global variables 
@@ -124,6 +124,52 @@ source("model/valuation/model_val_aggLiab.R")
 aggLiab <- list()
 aggLiab[[val_paramlist$tier_include[1]]] <- get_aggLiab(pop, indivLiab)
 
+
+
+
+
+#*******************************************************************************
+#   Simplification: Initial vested and inactives who are not in pay status  
+#*******************************************************************************
+
+# For initial PVB of terminated vested members 
+#  - no corresponding demographic data 
+#  - PVB = AL
+
+# - Assume the PVFB for initial vested members are paid up through out the next 50 years. 
+# - ALs and Bs of initial terminated vested and inactive members will be added to ALx.v and B.v. 
+# - Based on method used in PSERS model. 
+
+
+
+if (val_paramlist$estInitTerm){
+  AL.init.defrRet <-  val_paramlist$AL_defrRet_pctALservRet * aggLiab[[val_paramlist$tier_include[1]]]$servRet.la[1, "ALx.servRet.la"]
+ 
+  
+  df_init.defrRet <- data.frame(
+    year = 1:51 + (Global_paramlist$init_year - 1),
+    #B.init.v.yearsum = c(0, amort_cd(AL.init.v, paramlist$i, 50, TRUE))) %>% 
+    B.init.defrRet = c(0, amort_cp(AL.init.defrRet, val_paramlist$i, 50, val_paramlist$startingSalgrowth, TRUE))) %>% 
+    mutate(ALx.init.defrRet = ifelse(year == Global_paramlist$init_year, AL.init.defrRet, 0))
+  
+  for(i_v in 2:nrow(df_init.defrRet)){
+    df_init.defrRet$ALx.init.defrRet[i_v] <- 
+      with(df_init.defrRet, (ALx.init.defrRet[i_v - 1] - B.init.defrRet[i_v - 1]) * (1 + val_paramlist$i))
+  }
+  
+  # df_init.vested
+  
+  aggLiab[[val_paramlist$tier_include[1]]]$defrRet %<>% 
+    as.data.frame() %>%
+    left_join(df_init.defrRet, by = "year") %>%
+    mutate_all(list(na2zero)) %>%
+    mutate(ALx.defrRet = ALx.defrRet + ALx.init.defrRet,
+           B.defrRet   = B.defrRet   + B.init.defrRet) %>%
+    as.matrix
+}
+
+
+# aggLiab[[val_paramlist$tier_include[1]]]$defrRet
 
 
 

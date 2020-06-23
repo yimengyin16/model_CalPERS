@@ -422,7 +422,7 @@ run_sim <- function(i.r_ = i.r,
   cl <- makeCluster(ncore) 
   registerDoParallel(cl)
   
-  penSim_results <- foreach(k = -1:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
+  penSim_results <- foreach(k = -2:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
     # k <- 0
     # initialize
     penSim   <- penSim0
@@ -690,7 +690,7 @@ run_sim <- function(i.r_ = i.r,
   penSim_results <- bind_rows(penSim_results) %>% 
     mutate(
     	     ## Standard output variables
-    	     sim      = rep(-1:nsim, each = nyear),
+    	     sim      = rep(-2:nsim, each = nyear),
            sim_name = sim_paramlist_$sim_name,
     	     val_name = sim_paramlist_$val_name,
            # tier_Mode = tier_Mode,

@@ -141,6 +141,7 @@ liab_active %<>%
     # Bx = na2zero(benfactor * yos * fas),                        # accrued benefits
     bfactor_vec = ifelse(year >= year_reduction, bfactor - bfactor_reduction, bfactor),
     bfactor_vec = ifelse(yos  == 0, 0, bfactor_vec),
+    bfactor_vec = (1 + cali_bfactor) * bfactor_vec,
     Bx = na2zero(cumsum(bfactor_vec) * fas),
     
     
