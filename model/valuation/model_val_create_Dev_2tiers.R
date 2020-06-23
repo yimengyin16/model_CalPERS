@@ -1,28 +1,35 @@
 # Actuarial valuation for PERF A with 2-tier simplification
 
-rm(list = ls())
+# rm(list = ls())
+# 
+# source("libraries.R")
+# 
 
-source("libraries.R")
+#val_name_run <-
 
-
+cat("Creating valuation", val_name_run, "\n")
+  
 #*******************************************************************************
 #                           ### Valuation parameters ####                      
 #*******************************************************************************
-## File path of the run control file
 
-# Path to run control file
-dir_runControl <- "model/"
-fn_runControl  <- "RunControl.xlsx"
-filePath_runControl <- paste0(dir_runControl, fn_runControl)
+## The following variables are defined outside the function in model_val_runControl.R
+  
+# # Path to run control file
+# dir_runControl <- "model/"
+# fn_runControl  <- "RunControl.xlsx"
+# filePath_runControl <- paste0(dir_runControl, fn_runControl)
+# 
+# # Path to amortization and asset smoothing info
+# dir_planInfo <- "inputs/data_proc/"
+# filePath_planInfo <- paste0(dir_planInfo, "Data_CalPERS_planInfo_AV2018.RData")
+# 
+# # Output folder  
+# dir_outputs_val <- "model/valuation/outputs_val/"
 
-# Path to amortization and asset smoothing info
-dir_planInfo <- "inputs/data_proc/"
-filePath_planInfo <- paste0(dir_planInfo, "Data_CalPERS_planInfo_AV2018.RData")
 
-# Output folder  
-dir_outputs_val <- "model/valuation/outputs_val/"
-
-
+# val_name_run <- "Dev_2tiers_bf2"
+  
 ## Import global parameters
 Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>% 
   filter(!is.na(init_year)) %>% 
@@ -30,10 +37,9 @@ Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>%
  
 ## Import valuation parameters
 val_paramlist <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) %>% 
-  filter(!is.na(val_name), include == TRUE) %>% 
+  filter(!is.na(val_name), val_name == val_name_run) %>% 
   as.list
 
-val_name_run <- val_paramlist$val_name
 
 
 ## Additinal global variables 
@@ -66,7 +72,6 @@ for (tierName in val_paramlist$tier_include){
 #*******************************************************************************
 #                          Data preparation                                 ####
 #*******************************************************************************
-
 source("model/valuation/model_val_prepDataFuns.R")
 
 ## 1. Full salary schedule
@@ -194,6 +199,7 @@ init_unrecReturns.unadj_val <- init_unrecReturns.unadj
 #  Save outputs          ####
 #*******************************************************************************
 
+cat("Saving results... ")
 saveRDS(
     list(
       aggLiab = aggLiab,
@@ -205,46 +211,5 @@ saveRDS(
   file = paste0(dir_outputs_val, "val_", val_name_run, ".rds")
 )
 
-
-
-# #*******************************************************************************
-# #   Simplification: Initial vested and inactives who are not in pay status  
-# #*******************************************************************************
-# 
-# # For initial PVB of terminated vested members 
-# #  - no corresponding demographic data 
-# #  - PVB = AL
-# 
-# # - Assume the PVFB for initial vested members are paid up through out the next 50 years. 
-# # - ALs and Bs of initial terminated vested and inactive members will be added to ALx.v and B.v. 
-# # - Based on method used in PSERS model. 
-# 
-# # paramlist$AL_defrRet_0 <- 3517847922
-# 
-# if (paramlist$estInitTerm){
-# 	AL.init.v <-  paramlist$AL_defrRet_0 
-# 	
-# 	df_init.vested <- data.frame(
-# 		year = 1:51 + (Global_paramlist$init_year - 1),
-# 		#B.init.v.yearsum = c(0, amort_cd(AL.init.v, paramlist$i, 50, TRUE))) %>% 
-# 		B.init.v.yearsum = c(0, amort_cp(AL.init.v, paramlist$i, 50, paramlist$salgrowth_amort, TRUE))) %>% 
-# 		mutate(ALx.init.v.yearsum = ifelse(year == Global_paramlist$init_year, AL.init.v, 0))
-# 
-# 	for(i_v in 2:nrow(df_init.vested)){
-# 		df_init.vested$ALx.init.v.yearsum[i_v] <- 
-# 			with(df_init.vested, (ALx.init.v.yearsum[i_v - 1] - B.init.v.yearsum[i_v - 1]) * (1 + paramlist$i))
-# 	}
-# 	
-# 	# df_init.vested
-# 	
-# 	AggLiab$term %<>% 
-# 		as.data.frame() %>%
-# 		left_join(df_init.vested, by = "year") %>%
-# 		mutate_all(funs(na2zero)) %>%
-# 		mutate(ALx.v.yearsum = ALx.v.yearsum + ALx.init.v.yearsum,
-# 					 B.v.yearsum   = B.v.yearsum + B.init.v.yearsum) %>%
-# 		as.matrix
-# }
-# 
 
 
