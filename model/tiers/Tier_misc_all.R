@@ -101,7 +101,7 @@ v.year    <- 5
 fasyears  <- 1  # based on policy before PEPRA
 bfactor   <- 0.02
 cola_assumed <- 0.02 # assumed cola rates for valuation  
-EEC_rate <- 0.07
+EEC_rate <- 0.0735
 
 # Other tier params to add
 # cola

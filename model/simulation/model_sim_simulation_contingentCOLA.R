@@ -33,17 +33,43 @@ run_sim <- function(i.r_ = i.r,
       valData$indivLiab[[tn]]$servRet.la,
       by =  c("ea", "age", "year", "year_servRet")
     ) %>%
-    mutate(across(everything(), na2zero)) %>% 
+    mutate(across(everything(), na2zero)) %>%
     mutate(start_year  = year - (age - ea),
-           age_servRet = age - (year - year_servRet) 
-           ) %>% 
+           age_servRet = age - (year - year_servRet)
+           ) %>%
     select(start_year, ea, age, age_servRet, year_servRet, year, B.servRet.la, ALx.servRet.la, n_servRet.la, ax.servRet)
+
+  df_servRet0 %<>%
+    mutate(B.servRet.la   = ifelse(year_servRet == year , B.servRet.la, 0),
+           ALx.servRet.la = ifelse(year == init_year , ALx.servRet.la, 0)) %>%
+    filter(age >= age_servRet) %>%
+    arrange(start_year, ea, age_servRet, age) %>% 
+    
+    group_by(start_year, ea, age_servRet) %>% 
+    mutate(n_sum = sum(n_servRet.la)) %>% 
+    ungroup() %>% 
+    filter(n_sum != 0)
+  # 
+  # 
+  # x <- 
+  # df_servRet0 
+  # 
+  # x %>% nrow
   
-  df_servRet0 %<>% 
-    mutate(B.servRet.la   = ifelse(year_servRet == year , B.servRet.la, 0), 
-           ALx.servRet.la = ifelse(year == init_year , ALx.servRet.la, 0)) %>% 
-    filter(age >= age_servRet) %>% 
-    arrange(start_year, ea, age_servRet, age)
+  # df_servRet0 <-
+  #   left_join(
+  #     valData$indivLiab[[tn]]$servRet.la %>% ungroup,
+  #     valData$pop[[tn]]$wf_servRet.la,
+  #     by =  c("ea", "age", "year", "year_servRet")
+  #   ) %>%
+  #   mutate(across(everything(), na2zero)) %>% 
+  #   mutate(start_year  = year - (age - ea),
+  #          age_servRet = age - (year - year_servRet) 
+  #   ) %>% 
+  #   select(start_year, ea, age, age_servRet, year_servRet, year, B.servRet.la, ALx.servRet.la, n_servRet.la, ax.servRet)
+  # 
+  
+  # df_servRet0
   
   
   # 
@@ -524,7 +550,7 @@ run_sim <- function(i.r_ = i.r,
       
       # funded ratio based COLA
       #if(cola_type == "FR" & infl_type == "constant"){
-        if(penSim$FR_MA[j] >= 1) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR
+        if(penSim$FR_MA[j] >= 0.9999) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR # use 99.99 to avoid rounding issue
       #}
       
            

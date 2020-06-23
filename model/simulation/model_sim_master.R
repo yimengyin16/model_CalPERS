@@ -2,7 +2,7 @@
 
 
 # Valuation name
-sim_name_run <- "Dev_bf2"
+
 
 
 #*******************************************************************************
@@ -24,12 +24,14 @@ Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>%
  
 ## Import valuation parameters
 sim_paramlist <- read_excel(filePath_runControl, sheet="params_sim", skip  = 3) %>% 
-  filter(!is.na(sim_name), sim_name == sim_name_run) %>% 
+  filter(!is.na(sim_name), include == TRUE) %>% 
   as.list
 
 ## Import investment return scenarios
 returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>% filter(!is.na(scenario))
 
+
+sim_name_run <- sim_paramlist$sim_name #"Dev_cola"
 
 
 ## Additinal global variables 
@@ -66,18 +68,23 @@ i.r <- gen_returns()
 # i.r[1:5, 1:5]
 
 
-
-
 #*******************************************************************************
 #                          Simulation ####
 #*******************************************************************************
-#source("model/simulation/model_sim_simulation.R")
-source("model/simulation/model_sim_simulation_contingentCOLA.R")
+
+if(sim_paramlist$useContingentCOLA){
+  source("model/simulation/model_sim_simulation_contingentCOLA.R")
+} else {
+  source("model/simulation/model_sim_simulation.R")
+}
+
+
 
 {
   start_time <- Sys.time()	
   penSim_results <- run_sim()
-  print(Sys.time() - start_time)
+  end_time <- Sys.time()
+  print(end_time  - start_time)
   suppressMessages(gc())
 }
 
@@ -113,6 +120,7 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
                   "AL.active", "AL.nonactive",
                   "PVFB",
                   "PVFB.active",
+                  "cola_actual",
                   "B",
                   "NC_PR",
                   "ERC_PR",
@@ -133,12 +141,11 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
 # "n.ca.R1", "n.ca.R0S1", "nterms",
 # "ndisb.la", "ndisb.ca.R1", "ndisb.ca.R0S1" )
 
-
 penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display1))  %>% print
 penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
 penSim_results %>% filter(sim == -1) %>% select(one_of(var_display1))  %>% print
 
-
+print(end_time  - start_time)
 
 
 
