@@ -2,7 +2,7 @@
 
 
 # Valuation name
-sim_name_run <- "Dev_bf1"
+sim_name_run <- "Dev_bf2"
 
 
 #*******************************************************************************
@@ -29,9 +29,6 @@ sim_paramlist <- read_excel(filePath_runControl, sheet="params_sim", skip  = 3) 
 
 ## Import investment return scenarios
 returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>% filter(!is.na(scenario))
-
-
-
 
 
 
@@ -65,7 +62,7 @@ dir_val <- "model/valuation/outputs_val/"
 source("model/simulation/model_sim_invReturns.R")
 sim_paramlist$seed <- 123
 i.r <- gen_returns()
- i.r
+# i.r
 # i.r[1:5, 1:5]
 
 
@@ -74,8 +71,17 @@ i.r <- gen_returns()
 #*******************************************************************************
 #                          Simulation ####
 #*******************************************************************************
-source("model/simulation/model_sim_simulation.R")
-penSim_results <- run_sim()
+#source("model/simulation/model_sim_simulation.R")
+source("model/simulation/model_sim_simulation_contingentCOLA.R")
+
+{
+  start_time <- Sys.time()	
+  penSim_results <- run_sim()
+  print(Sys.time() - start_time)
+  suppressMessages(gc())
+}
+
+
 
 
 
@@ -89,7 +95,7 @@ outputs_list <- list(sim_paramlist    = sim_paramlist,
                      results          = penSim_results)
 
 
-saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name, ".rds"))
+saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name_run, ".rds"))
 
 
 

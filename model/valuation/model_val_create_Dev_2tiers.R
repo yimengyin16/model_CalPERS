@@ -2,7 +2,7 @@
 
 
 # Valuation name
-val_name_run <- "Dev_2tiers_bf1"
+val_name_run <- "Dev_2tiers_bf2"
 
 
 
@@ -151,12 +151,12 @@ init_unrecReturns.unadj_val <- init_unrecReturns.unadj
 saveRDS(
     list(
       aggLiab = aggLiab,
-      indivLaib = indivLiab,
+      indivLiab = indivLiab,
       pop = pop,
       init_amort_raw = init_amort_raw_val,
       init_unrecReturns.unadj = init_unrecReturns.unadj_val
     ),
-  file = paste0(dir_outputs_val, "val_", val_name, ".rds")
+  file = paste0(dir_outputs_val, "val_", val_name_run, ".rds")
 )
 
 
