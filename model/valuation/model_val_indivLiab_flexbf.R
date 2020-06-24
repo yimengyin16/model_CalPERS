@@ -141,6 +141,7 @@ liab_active %<>%
     # Bx = na2zero(benfactor * yos * fas),                        # accrued benefits
     bfactor_vec = ifelse(year >= year_reduction, bfactor - bfactor_reduction, bfactor),
     bfactor_vec = ifelse(yos  == 0, 0, bfactor_vec),
+    bfactor_vec = (1 + cali_bfactor) * bfactor_vec,
     Bx = na2zero(cumsum(bfactor_vec) * fas),
     
     
@@ -184,9 +185,11 @@ liab_active %<>%
     # Note: these ax.X variables won't be needed after flexible benefits are modeled.  
     # Service retirement benefit (will be replaced when contingent retirement beneift is added) ax.r
     
+    ax.servRet  = get_tla(pxm_servRet, i, COLA.scale_compound),
     ax.defrRet  = get_tla(pxm_defrRet, i, COLA.scale_compound),      # deferred retirement benefit (actually we only need the value at age_vben?)
     ax.disbRet  = get_tla(pxm_disbRet, i, COLA.scale_compound),      # disability retirement benefit
     ax.deathBen = get_tla(pxm_servRet, i, COLA.scale_compound),      # beneificiaries of death benefits
+    
     
     # ax.servRet  = get_tla(pxm_servRet, i, COLA.scale),   
     # ax.r.W.ret is already in mortality.post.model_
@@ -275,7 +278,7 @@ liab_servRet.la_init <-
 	filter(# age >= ea, 
 		     age >= age_servRet) %>% 
 	left_join(tierData$df_n_servRet %>% select(start_year, ea, age, age_servRet, benefit_servRet), by = c("ea", "age", "start_year", "age_servRet")) %>% 
-	left_join(liab_active %>% select(start_year, ea, age, pxm_servRet), by = c("age", "ea", "start_year")) %>% 
+	left_join(liab_active %>% select(start_year, ea, age, pxm_servRet, ax.servRet), by = c("age", "ea", "start_year")) %>% 
 	group_by(start_year, age_servRet, ea) %>% 
 	mutate(year_servRet = start_year + age_servRet - ea, 
 				 year = start_year + age - ea,
@@ -314,7 +317,7 @@ liab_servRet.la <-
 # Merging data from liab_active
 liab_servRet.la <- 
   merge(liab_servRet.la,
-				select(liab_active, start_year, ea, age, Bx.servRet.laca, pxm_servRet) %>% data.table(key = "ea,age,start_year"),
+				select(liab_active, start_year, ea, age, Bx.servRet.laca, pxm_servRet, ax.servRet) %>% data.table(key = "ea,age,start_year"),
 				all.x = TRUE, 
 				by = c("ea", "age","start_year")) %>%
 	# arrange(start_year, ea, age_servRet) %>% 

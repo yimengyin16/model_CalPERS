@@ -2,8 +2,9 @@
 
 
 # Valuation name
-sim_name_run <- "Dev_bf1"
+# rm(list = ls())
 
+source("libraries.R")
 
 #*******************************************************************************
 #                           ### Valuation parameters ####                      
@@ -24,15 +25,14 @@ Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>%
  
 ## Import valuation parameters
 sim_paramlist <- read_excel(filePath_runControl, sheet="params_sim", skip  = 3) %>% 
-  filter(!is.na(sim_name), sim_name == sim_name_run) %>% 
+  filter(!is.na(sim_name), include == TRUE) %>% 
   as.list
 
 ## Import investment return scenarios
 returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>% filter(!is.na(scenario))
 
 
-
-
+sim_name_run <- sim_paramlist$sim_name #"Dev_cola"
 
 
 ## Additinal global variables 
@@ -65,17 +65,31 @@ dir_val <- "model/valuation/outputs_val/"
 source("model/simulation/model_sim_invReturns.R")
 sim_paramlist$seed <- 123
 i.r <- gen_returns()
- i.r
-# i.r[1:5, 1:5]
-
-
+#i.r
+i.r[1:10, 1:5]
 
 
 #*******************************************************************************
 #                          Simulation ####
 #*******************************************************************************
-source("model/simulation/model_sim_simulation.R")
-penSim_results <- run_sim()
+
+if(sim_paramlist$useContingentCOLA){
+  source("model/simulation/model_sim_simulation_contingentCOLA.R")
+} else {
+  source("model/simulation/model_sim_simulation.R")
+}
+
+
+
+{
+  start_time <- Sys.time()	
+  penSim_results <- run_sim()
+  end_time <- Sys.time()
+  print(end_time  - start_time)
+  suppressMessages(gc())
+}
+
+
 
 
 
@@ -89,7 +103,7 @@ outputs_list <- list(sim_paramlist    = sim_paramlist,
                      results          = penSim_results)
 
 
-saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name, ".rds"))
+saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name_run, ".rds"))
 
 
 
@@ -102,11 +116,14 @@ saveRDS(outputs_list, file = paste0(dir_outputs, "sim_", sim_name, ".rds"))
 
 # Display1 Basic examination
 var_display1 <- c("sim_name", "val_name", "sim", "year", 
-                  "FR_MA", "FR_AA", "MA", "AA", 
+                  "AL", "FR_MA",  "UAAL", "ERC", "ERC_PR",
+                  "MA",
                   "AL", 
                   "AL.active", "AL.nonactive",
+                  "AL.defrRet",
                   "PVFB",
                   "PVFB.active",
+                  "cola_actual",
                   "B",
                   "NC_PR",
                   "ERC_PR",
@@ -127,10 +144,18 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
 # "n.ca.R1", "n.ca.R0S1", "nterms",
 # "ndisb.la", "ndisb.ca.R1", "ndisb.ca.R0S1" )
 
-
 penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display1))  %>% print
 penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
-penSim_results %>% filter(sim == -1) %>% select(one_of(var_display1))  %>% print
+penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
+
+print(end_time  - start_time)
+
+
+
+
+penSim_results %>% filter(sim == 0, year == max(year)) %>% 
+  mutate(defr_pct.active = AL.defrRet/AL.active,
+         defr_pct_servRet = AL.defrRet / AL.servRet)
 
 
 
