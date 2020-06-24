@@ -38,6 +38,7 @@ dir_outputs_val <- "model/valuation/outputs_val/"
 # Global_paramlist$range_age <- with(Global_paramlist, min_age:max_age)
 # Global_paramlist$range_ea  <- with(Global_paramlist, min_ea:max_ea)
 
+
 val_runList <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) %>% 
   filter(include == TRUE)
 
@@ -48,9 +49,11 @@ val_runList <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) %>
 #                    ### Run valuations   ####                      
 #*******************************************************************************
 
+source("model/valuation/model_val_create_Dev_2tiers.R")
+
 for (val_name_run in val_runList$val_name){
   #val_name_run <- val_runList$val_name[1]
-  source("model/valuation/model_val_create_Dev_2tiers.R")
+  create_val_2tiers(val_name_run)
   
 }
 

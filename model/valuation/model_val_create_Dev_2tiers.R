@@ -5,7 +5,11 @@
 # source("libraries.R")
 # 
 
-#val_name_run <-
+# val_name_run <- val_runList$val_name[1]
+# create_val_2tiers(val_name_run)
+
+
+create_val_2tiers <- function(val_name_run){
 
 cat("Creating valuation", val_name_run, "\n")
   
@@ -72,7 +76,7 @@ for (tierName in val_paramlist$tier_include){
 #*******************************************************************************
 #                          Data preparation                                 ####
 #*******************************************************************************
-source("model/valuation/model_val_prepDataFuns.R")
+source("model/valuation/model_val_prepDataFuns.R", local = TRUE)
 
 ## 1. Full salary schedule
 tierData_miscAll <- add_salary_full(tierData_miscAll)
@@ -103,7 +107,7 @@ tierData_miscAll <- adj_initMembers(tierData_miscAll)
 #                            Demographics                                   ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_demographics_singleTier.R")
+source("model/valuation/model_val_demographics_singleTier.R", local = TRUE)
 
 pop <- get_demographics(tierData_miscAll)
 
@@ -113,7 +117,7 @@ pop <- get_demographics(tierData_miscAll)
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf.R")
+source("model/valuation/model_val_indivLiab_flexbf.R", local = TRUE)
 
 indivLiab <- list()
 indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLiab(tierData_miscAll)
@@ -124,7 +128,7 @@ indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLiab(tierData_miscAll)
 #     Aggregate actuarial liabilities, normal costs and benefits        ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_aggLiab.R")
+source("model/valuation/model_val_aggLiab.R", local = TRUE)
 
 aggLiab <- list()
 aggLiab[[val_paramlist$tier_include[1]]] <- get_aggLiab(pop, indivLiab)
@@ -199,7 +203,7 @@ init_unrecReturns.unadj_val <- init_unrecReturns.unadj
 #  Save outputs          ####
 #*******************************************************************************
 
-cat("Saving results... ")
+cat("Saving results...\n")
 saveRDS(
     list(
       aggLiab = aggLiab,
@@ -210,6 +214,6 @@ saveRDS(
     ),
   file = paste0(dir_outputs_val, "val_", val_name_run, ".rds")
 )
-
+}
 
 
