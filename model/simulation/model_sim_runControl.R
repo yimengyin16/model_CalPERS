@@ -2,7 +2,7 @@
 
 
 # Valuation name
-# rm(list = ls())
+rm(list = ls())
 
 source("libraries.R")
 

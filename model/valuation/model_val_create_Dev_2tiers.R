@@ -57,6 +57,8 @@ Global_paramlist$range_ea  <- with(Global_paramlist, min_ea:max_ea)
 val_paramlist$tier_include <-  rlang::parse_expr(paste0("c(", val_paramlist$tier_include, ")" )) %>% eval
 
 
+
+
 #*******************************************************************************
 #                         Load data                                         ####
 #*******************************************************************************
@@ -73,10 +75,18 @@ for (tierName in val_paramlist$tier_include){
 
 
 
+
+
 #*******************************************************************************
 #                          Data preparation                                 ####
 #*******************************************************************************
 source("model/valuation/model_val_prepDataFuns.R", local = TRUE)
+
+
+## Modify tier parameters as specified in the parameter list   
+# !! This should be run before any further operations!!
+tierData_miscAll <- adj_tierParams(tierData_miscAll)
+
 
 ## 1. Full salary schedule
 tierData_miscAll <- add_salary_full(tierData_miscAll)

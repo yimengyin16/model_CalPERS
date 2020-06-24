@@ -17,6 +17,27 @@
 
 
 
+#*******************************************************************************
+#                     Adjustments to tier parameters                        ####
+#*******************************************************************************
+adj_tierParams <- function(tierData,
+                           val_paramlist_    =  val_paramlist,
+                           Global_paramlist_ =  Global_paramlist){
+  # 
+  # tierData          <- tierData_miscAll
+  # val_paramlist_    <-  val_paramlist
+  # Global_paramlist_ <-  Global_paramlist
+  
+  # Override assumed cola:
+  
+  if(!is.na(val_paramlist$cola_assumed_override)){
+    tierData$tier_params$cola_assumed <- val_paramlist_$cola_assumed_override
+  }
+  
+  return(tierData)
+}
+
+
 
 
 
@@ -478,6 +499,7 @@ adj_initMembers <- function(tierData,
   return(tierData)
   
 }  
+
 
 
 

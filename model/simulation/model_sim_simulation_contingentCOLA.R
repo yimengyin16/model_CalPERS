@@ -19,7 +19,34 @@ run_sim <- function(i.r_ = i.r,
   # note that "dir_val" is defined outside the function
   tn <- "miscAll" # this will be replaced by the tag for aggregate results, like "agg" 
  
-
+  
+  #*****************************************************************************
+  #              Special settings for modeling CalPERS PERF A      ####
+  #***************************************************************************** 
+  
+  # Set initial total amortization basis
+  #  
+  
+  if(use_baselineUAAL){
+    df_baseline <- readRDS(paste0(dir_outputs, "sim_", sim_name_baseline, ".rds"))$results
+    UAAL.year1.baseline <- df_baseline %>% filter(sim == 0, year == init_year) %>% pull(UAAL)
+  }
+  
+  
+  # Set initial assets
+  
+  if(use_baselineMA){
+    df_baseline <- readRDS(paste0(dir_outputs, "sim_", sim_name_baseline, ".rds"))$results
+    
+    init_MA_type <- "MA0"
+    init_AA_type <- "AA0"
+    
+    MA_0 <- df_baseline %>% filter(sim == 0, year == init_year) %>% pull(MA)
+    AA_0 <- df_baseline %>% filter(sim == 0, year == init_year) %>% pull(AA)
+    
+  }
+  
+  
   
   
   #*****************************************************************************
@@ -331,7 +358,7 @@ run_sim <- function(i.r_ = i.r,
       # WARNING: Does not work with "method 2" for AA.
 
    MA.year1.model <- switch(init_MA_type, 
-   									    MA = MA_0_DB,                         # Use preset value
+   									    MA0 = MA_0,                         # Use preset value
    									    AL = penSim0$AL[1],                   # Assume inital fund equals inital liability.
    									    AL_pct = penSim0$AL[1] * MA_0_pct) # Inital MA is a proportion of inital AL
    
@@ -351,7 +378,13 @@ run_sim <- function(i.r_ = i.r,
    # Source of the demoninator: AV2016lag page n14, sum of outstanding amortization basis
  
    # CalPERS:
-   factor.initAmort <- UAAL.year1.model / sum(valData$init_amort_raw$balance)
+   
+   if(use_baselineUAAL){
+     factor.initAmort <- UAAL.year1.baseline / sum(valData$init_amort_raw$balance)
+   } else {
+     factor.initAmort <- UAAL.year1.model    / sum(valData$init_amort_raw$balance)
+   }
+   
    
    
    if(useAVamort){

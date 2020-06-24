@@ -145,17 +145,17 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
 # "ndisb.la", "ndisb.ca.R1", "ndisb.ca.R0S1" )
 
 penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display1))  %>% print
-penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
-penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
+# penSim_results %>% filter(sim == 1)  %>% select(one_of(var_display1))  %>% print
+# penSim_results %>% filter(sim == -2) %>% select(one_of(var_display1))  %>% print
 
 print(end_time  - start_time)
 
 
 
-
-penSim_results %>% filter(sim == 0, year == max(year)) %>% 
-  mutate(defr_pct.active = AL.defrRet/AL.active,
-         defr_pct_servRet = AL.defrRet / AL.servRet)
+# 
+# penSim_results %>% filter(sim == 0, year == max(year)) %>% 
+#   mutate(defr_pct.active = AL.defrRet/AL.active,
+#          defr_pct_servRet = AL.defrRet / AL.servRet)
 
 
 
