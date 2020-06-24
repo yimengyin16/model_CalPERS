@@ -4,42 +4,42 @@
 # Valuation name
 # rm(list = ls())
 
-source("libraries.R")
+#source("libraries.R")
 
 #*******************************************************************************
 #                           ### Valuation parameters ####                      
 #*******************************************************************************
 ## File path of the run control file
 
-dir_runControl <- "model/"
-fn_runControl  <- "RunControl.xlsx"
-filePath_runControl <- paste0(dir_runControl, fn_runControl)
-
-dir_outputs <- "model/simulation/outputs_sim/"
-
-
-## Import global parameters
-Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>% 
-  filter(!is.na(init_year)) %>% 
-  as.list
- 
-## Import valuation parameters
-sim_paramlist <- read_excel(filePath_runControl, sheet="params_sim", skip  = 3) %>% 
-  filter(!is.na(sim_name), include == TRUE) %>% 
-  as.list
-
-## Import investment return scenarios
-returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>% filter(!is.na(scenario))
-
-
-sim_name_run <- sim_paramlist$sim_name #"Dev_cola"
+# dir_runControl <- "model/"
+# fn_runControl  <- "RunControl.xlsx"
+# filePath_runControl <- paste0(dir_runControl, fn_runControl)
+# 
+# dir_outputs <- "model/simulation/outputs_sim/"
+# 
+# 
+# ## Import global parameters
+# Global_paramlist <- read_excel(filePath_runControl, sheet="GlobalParams") %>% 
+#   filter(!is.na(init_year)) %>% 
+#   as.list
+#  
+# ## Import valuation parameters
+# sim_paramlist <- read_excel(filePath_runControl, sheet="params_sim", skip  = 3) %>% 
+#   filter(!is.na(sim_name), include == TRUE) %>% 
+#   as.list
+# 
+# ## Import investment return scenarios
+# returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>% filter(!is.na(scenario))
+# 
+# 
+# sim_name_run <- sim_paramlist$sim_name #"Dev_cola"
 
 
 ## Additinal global variables 
 
-# age and entry age ranges
-Global_paramlist$range_age <- with(Global_paramlist, min_age:max_age)
-Global_paramlist$range_ea  <- with(Global_paramlist, min_ea:max_ea)
+# # age and entry age ranges
+# Global_paramlist$range_age <- with(Global_paramlist, min_age:max_age)
+# Global_paramlist$range_ea  <- with(Global_paramlist, min_ea:max_ea)
 
 
 # turn tier names into a character vector
