@@ -8,10 +8,10 @@ ls_simNames <-
     "twoTiers_bf1_highERC",
 
     "twoTiers_cola_lowERC",
-    "twoTiers_cola_highERC",
+    "twoTiers_cola_highERC2",
 
     "twoTiers_bf1&cola_lowERC",
-    "twoTiers_bf1&cola_highERC"
+    "twoTiers_bf1&cola_highERC2"
     )
 
 df_results <- 
@@ -46,8 +46,8 @@ df_memo_det2 <-
   #select(sim_name, year, AL,UAAL, FR_MA, ERC,  ERC_PR, NC_PR, NC.ER_PR, SC_PR ) %>% 
   mutate(across(!contains("_") & !year & !sim, ~ .x / 1e9))
 
-filter(df_memo_det1, year == 2018) %>% kable(digits = 1)
-filter(df_memo_det1, year == 2028) %>% kable(digits = 1)
+filter(df_memo_det2, year == 2018) %>% kable(digits = 1)
+filter(df_memo_det2, year == 2028) %>% kable(digits = 1)
 
 
 
@@ -99,31 +99,31 @@ save(df_memo_det1, df_memo_det2, df_memo_stch,
 
 
 xlsx::write.xlsx2(df_memo_det1 %>% filter(year %in% c(2018, 2025, 2028, 2030)),
-                  file = "analysis/outputs_analysis/PERFA_memo.xlsx", 
+                  file = "analysis/outputs_analysis/PERFA_memo2.xlsx", 
                   sheetName = "detRun_returnAchieved" 
                   )
 
 xlsx::write.xlsx2(df_memo_det2 %>% filter(year %in% c(2018, 2025, 2028, 2030)),
-                  file = "analysis/outputs_analysis/PERFA_memo.xlsx", 
+                  file = "analysis/outputs_analysis/PERFA_memo2.xlsx", 
                   sheetName = "detRun_assetShock",
                   append = TRUE
                   )
 
 xlsx::write.xlsx2(df_memo_stch %>% filter(year %in% c(2025)),
-                  file = "analysis/outputs_analysis/PERFA_memo.xlsx", 
+                  file = "analysis/outputs_analysis/PERFA_memo2.xlsx", 
                   sheetName = "stchRun_2025",
                   append = TRUE
                   )
 
 
 xlsx::write.xlsx2(df_memo_stch %>% filter(year %in% c(2028)),
-                  file = "analysis/outputs_analysis/PERFA_memo.xlsx", 
+                  file = "analysis/outputs_analysis/PERFA_memo2.xlsx", 
                   sheetName = "stchRun_2028",
                   append = TRUE
 )
 
 xlsx::write.xlsx2(df_memo_stch %>% filter(year %in% c(2030)),
-                  file = "analysis/outputs_analysis/PERFA_memo.xlsx", 
+                  file = "analysis/outputs_analysis/PERFA_memo2.xlsx", 
                   sheetName = "stchRun_2030",
                   append = TRUE
                   )
