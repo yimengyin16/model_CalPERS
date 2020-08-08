@@ -25,18 +25,23 @@
 
 
 ##' Members included 
-#'  - misc classic tier 1
-#'  - misc classic tier 2
-#'  - misc PEPRA tier 1
-#'  - misc PEPRA tier 2
-#'  - industrial classic tier 1/2
-#'  - industrial classic tier 1/2 
-
+#'  - state safety classic
+#'  - state safety PEPRA
+#'  - state POFF classic
+#'  - state POFF PEPRA
+#'  - CHP classic
+#'  - CHP PEPRA
     
 
 ##' Service retirement 
 #'  
-#'  - Use benefit rules based on Misc Tier 1 classic members with 2%55 rules.
+#'  - Use benefit rules based on safety and POFF classic members with 
+#'     - safety: 2.5%55 (before 2011)
+#'     - POFF:   3%55 or 3%50 (before 2011)  
+#'     
+#'     Use 50/5  3%@50 (constant 3%) for now, may want to adjust the benefit factor downward
+#'     to account for the lower benefit  
+#'     
 #'  - Benefit factor will adjusted downward to take into account PEPRA members
 #'  - Try using a single retirement age
 #'  
@@ -45,8 +50,8 @@
 #'  
 #'  Vesting: yos >=5 
 #'  
-#'  Benefit factor: 2% at age 55 (adjust to 58 for PEPRA?)
-
+#'  Benefit factor: constant 3%, adjust downward for calibration
+#'  Final compensation: 12 month
 
 # Deferred retirement  
 #' start receiving benefit at 59
@@ -55,19 +60,15 @@
 
 # Disability retirement
 #  
-#  - Based on regular disability retirement benefit
-#  - Adjust benefit upward for industrial disability
+#  - Based on industrial disability retirement benefit
+#  - Adjust benefit downward for industrial disability
 #  
-#  - Eligibility: yos > 5
+#  - Eligibility: no restriction on YOS
 #
 #  - Benefit: 
-#     - formula: 1.8% x service x Final compensation (may want to use higher benefit factor)
-#     - service:
-#      - YOS if YOS <10 or YOS > 18.518, else
-#      - YOS + years would have worked until 60, 
-#      - with max benefit 1/3 of final compensation
-#   
-#  - Simplification: does not compare with service retirement benefit
+#     - 50% of final compensation
+#     - May choose Service Retirement benefit if larger 
+#     - Simplification: does not compare with service retirement benefit
 
 
 # Death benefit: pre-retirement
@@ -86,7 +87,6 @@ dir_data    <- "inputs/data_proc/"
 dir_outputs <- "model/tiers/tierData/"
 
 
-
 # Model settings
 range_age <- 20:110
 range_ea  <- 20:74  # max retirement age is assumed to be 75 (qxr = 1 at age 75 in AV tables) 
@@ -95,20 +95,44 @@ range_ea  <- 20:74  # max retirement age is assumed to be 75 (qxr = 1 at age 75 
 
 # Tier specific parameters
 
-tier_name <- "miscAll"
+tier_name <- "sftyAll"
 age_vben  <- 59 # assumed age of starting receiving deferred retirement benefits
 v.year    <- 5
 fasyears  <- 1  # based on policy before PEPRA
-bfactor   <- 0.02
+bfactor   <- 0.03
 cola_assumed <- 0.02 # assumed cola rates for valuation  
-EEC_rate <- 0.0735
+EEC_rate  <- 0.116
+
+# Notes on aggregate EEC rate:
+#  -  calculated based on covered payroll and EEC in AV2018 np17-19
+#  -  Safety: 2316124913, 256385863
+#  -  POFF:   3522647266, 426055155
+#  -  CHP:    871895121,  96865133
+# (96865133 + 426055155 + 256385863)/(2316124913+3522647266+871895121) = 0.1161
 
 # Other tier params to add
-# cola
+#  gender ratio
 
-# EEC rate, need to think about EEC
 
-# gender ratio
+#' Notes on group weights
+#'  - weights are constructed based on member data provided in AV2018
+#' Active members (AV2018 np15-19)
+#   - safety-classic	0.2605
+#   - safety-pepra	  0.1078
+#   - poff-classic	  0.3796
+#   - poff-pepra	    0.1570
+#   - chp-classic	    0.0672
+#   - chp-pepra	      0.0278
+
+# Notes on gender ratio:
+# 90% male and 10% female for all calculations
+
+
+# Need to combine two types of disability mortality rates: using weighted average
+#  - assume 50% of disability retirement is job-related
+
+
+
 
 #*******************************************************************************
 #                      ## Loading data  ####
@@ -127,18 +151,21 @@ load(paste0(dir_data, "Data_CalPERS_demographics_20180630_fillin.RData"))
 
 # groups included
 grp_include <- df_qxr_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include , "misc|inds")]
+grp_include <- grp_include[str_detect(grp_include , "sfty|poff|chp")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "misc_classic","wgt"] <-  0.7
-wgts[wgts$grp == "misc_pepra",  "wgt"] <-  0.1
-wgts[wgts$grp == "inds_classic","wgt"] <-  0.1
-wgts[wgts$grp == "inds_pepra",  "wgt"] <-  0.1
+wgts[wgts$grp == "sfty_classic", "wgt"] <-  0.2605
+wgts[wgts$grp == "sfty_pepra",   "wgt"] <-  0.1078
+wgts[wgts$grp == "poff_classic", "wgt"] <-  0.3796
+wgts[wgts$grp == "poff_pepra_1", "wgt"] <-  0.1570 * 0.5   # 2.5%@57
+wgts[wgts$grp == "poff_pepra_2", "wgt"] <-  0.1570 * 0.5   # 2.7%@57
+wgts[wgts$grp == "chp_classic",  "wgt"] <-  0.0672
+wgts[wgts$grp == "chp_pepra",    "wgt"] <-  0.0278
+# wgts;sum(wgts$wgt)
 
 ## calculate weighted average
-
 df_qxr_tier <- 
   df_qxr_imputed %>% 
   filter(grp %in% grp_include) %>% 
@@ -150,21 +177,20 @@ df_qxr_tier <-
   ungroup()
 
 
+
 ## Disability retirement rates
 
 # groups included
 grp_include <- df_qxd_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include, "misc|inds")]
+grp_include <- grp_include[str_detect(grp_include, "sfty|poff|chp")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "misc_t1_female","wgt"] <-  6
-wgts[wgts$grp == "misc_t1_male",  "wgt"] <-  4
-wgts[wgts$grp == "misc_t2_female","wgt"] <-  0.6
-wgts[wgts$grp == "misc_t2_male",  "wgt"] <-  0.4
-wgts[wgts$grp == "inds",  "wgt"]         <-  2
-
+wgts[wgts$grp == "sfty","wgt"] <- 0.2605 + 0.1078
+wgts[wgts$grp == "poff","wgt"] <- 0.3796 + 0.1570
+wgts[wgts$grp == "chp","wgt"]  <- 0.0672 + 0.0278
+# wgts
 
 ## calculate weighted average
 # Need to combine two types of disability rates: adding the two rates
@@ -188,15 +214,15 @@ df_qxd_tier <-
 
 # groups included
 grp_include <- df_qxt.refund_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include, "misc|inds")]
+grp_include <- grp_include[str_detect(grp_include, "sfty|poff|chp")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "misc_t1",  "wgt"] <-  10
-wgts[wgts$grp == "misc_t2",  "wgt"] <-  0.5
-wgts[wgts$grp == "inds",     "wgt"] <-  2
-
+wgts[wgts$grp == "sfty","wgt"] <- 0.2605 + 0.1078
+wgts[wgts$grp == "poff","wgt"] <- 0.3796 + 0.1570
+wgts[wgts$grp == "chp","wgt"]  <- 0.0672 + 0.0278
+# wgts
 
 ## calculate weighted average
 df_qxt.refund_tier <- 
@@ -204,8 +230,8 @@ df_qxt.refund_tier <-
   filter(grp %in% grp_include) %>% 
   left_join(wgts, by = "grp") %>% 
   group_by(yos, ea) %>% 
-  summarise(qxt.refund = weighted.mean(qxt.refund, wgt),
-            .groups = "rowwise") %>% 
+  summarise(qxt.refund = weighted.mean(qxt.refund, wgt), 
+            .groups = "drop") %>% 
   mutate(grp = tier_name) %>% 
   relocate(grp) %>% 
   arrange(ea, yos) %>% 
@@ -218,15 +244,15 @@ df_qxt.refund_tier <-
 
 # groups included
 grp_include <- df_qxt.vest_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include, "misc|inds")]
+grp_include <- grp_include[str_detect(grp_include, "sfty|poff|chp")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "misc_t1",  "wgt"] <-  10
-wgts[wgts$grp == "misc_t2",  "wgt"] <-  0.5
-wgts[wgts$grp == "inds",     "wgt"] <-  2
-
+wgts[wgts$grp == "sfty","wgt"] <- 0.2605 + 0.1078
+wgts[wgts$grp == "poff","wgt"] <- 0.3796 + 0.1570
+wgts[wgts$grp == "chp","wgt"]  <- 0.0672 + 0.0278
+# wgts
 
 ## calculate weighted average
 df_qxt.vest_tier <- 
@@ -235,7 +261,7 @@ df_qxt.vest_tier <-
   left_join(wgts, by = "grp") %>% 
   group_by(yos, ea) %>% 
   summarise(qxt.vest = weighted.mean(qxt.vest, wgt),
-            .groups = "rowwise") %>% 
+            .groups = "drop") %>% 
   mutate(grp = tier_name) %>% 
   relocate(grp) %>% 
   arrange(ea, yos) %>% 
@@ -243,7 +269,6 @@ df_qxt.vest_tier <-
 
 
 ## combine two types of termination rates
-
 df_qxt_tier <- 
   left_join(df_qxt.vest_tier,
             df_qxt.refund_tier,
@@ -254,10 +279,11 @@ df_qxt_tier <-
   relocate(grp, ea, age, yos, qxt)
 
 
+
 ## Pre-retirement mortality
 df_qxm.pre_tier <-  
   df_qxm.pre_imputed %>% 
-  mutate(qxm.pre.nonocc = 0.6 * qxm.pre.nonocc_female + 0.4 * qxm.pre.nonocc_male,
+  mutate(qxm.pre.nonocc = 0.9 * qxm.pre.nonocc_female + 0.1 * qxm.pre.nonocc_male,
          qxm.pre.occ    = 0.9 * qxm.pre.occ_female    + 0.1 * qxm.pre.occ_male,
          qxm.pre = qxm.pre.nonocc + qxm.pre.occ,
          grp = tier_name
@@ -270,15 +296,15 @@ df_qxm.pre_tier <-
 ## Post-retirement mortality, without projection
 
 # Need to combine two types of disability mortality rates: using weighted average
-#  - assume x% of disability retirement is job-related
+#  - assume 50% of disability retirement is job-related
 
 
 df_qxm.post_tier <-  
   df_qxm.post_imputed %>% 
-  mutate(qxm.post         = 0.6 * qxm.post_female + 0.4 * qxm.post_male,
-         qxmd.post.nonocc = 0.6 * qxmd.post.nonocc_female + 0.4 * qxmd.post.nonocc_male,
+  mutate(qxm.post         = 0.9 * qxm.post_female + 0.1 * qxm.post_male,
+         qxmd.post.nonocc = 0.9 * qxmd.post.nonocc_female + 0.1 * qxmd.post.nonocc_male,
          qxmd.post.occ    = 0.9 * qxmd.post.occ_female    + 0.1 * qxmd.post.occ_male,
-         qxmd.post        = 0.8 * qxmd.post.nonocc + 0.2 * qxmd.post.occ,
+         qxmd.post        = 0.5 * qxmd.post.nonocc + 0.5 * qxmd.post.occ,
          grp = tier_name
   ) %>% 
   select(grp, age, 
@@ -292,10 +318,10 @@ df_qxm.post_tier <-
 ## Post-retirement mortality, with projection
 df_qxm.post_proj_tier <-  
   df_qxm.post_proj_imputed %>% 
-  mutate(qxm.post_proj         = 0.6 * qxm.post_female_proj + 0.4 * qxm.post_male_proj,
-         qxmd.post.nonocc_proj = 0.6 * qxmd.post.nonocc_female_proj + 0.4 * qxmd.post.nonocc_male_proj,
+  mutate(qxm.post_proj         = 0.9 * qxm.post_female_proj + 0.1 * qxm.post_male_proj,
+         qxmd.post.nonocc_proj = 0.9 * qxmd.post.nonocc_female_proj + 0.1 * qxmd.post.nonocc_male_proj,
          qxmd.post.occ_proj    = 0.9 * qxmd.post.occ_female_proj    + 0.1 * qxmd.post.occ_male_proj,
-         qxmd.post_proj        = 0.8 * qxmd.post.nonocc_proj + 0.2 * qxmd.post.occ_proj,
+         qxmd.post_proj        = 0.9 * qxmd.post.nonocc_proj + 0.1 * qxmd.post.occ_proj,
          grp = tier_name
   ) %>% 
   select(grp, age, 
@@ -405,6 +431,7 @@ decrements_improvement <-
     by = c("year", "age")
     )
 
+# Improvement factor, based on 2017 basis
 decrements_improvement %<>% 
   group_by(age) %>% 
   arrange(age, year) %>% 
@@ -416,20 +443,22 @@ decrements_improvement %<>%
 #*******************************************************************************
 #                      ## Salary Scale  ####
 #*******************************************************************************
-
-
 # df_salScale.merit_imputed
+
+# assumption: inflation component of salary scale: 2.75%
+
 
 # groups included
 grp_include <- df_salScale.merit_imputed$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include, "misc|inds")]
+grp_include <- grp_include[str_detect(grp_include, "sfty|poff|chp")]
 
 # weight for each group
 wgts <- tibble(grp = grp_include, wgt = 0)
 
-wgts[wgts$grp == "misc", "wgt"] <-  10
-wgts[wgts$grp == "inds", "wgt"] <-  0.8
-wgts
+wgts[wgts$grp == "sfty","wgt"] <- 0.2605 + 0.1078
+wgts[wgts$grp == "poff","wgt"] <- 0.3796 + 0.1570
+wgts[wgts$grp == "chp","wgt"]  <- 0.0672 + 0.0278
+# wgts
 
 ## calculate weighted average
 df_salScale_tier <- 
@@ -462,8 +491,7 @@ df_salScale_tier <-
 
 ## groups included 
 grp_include <- df_nactives_fillin$grp %>% unique
-grp_include <- grp_include[str_detect(grp_include, "misc|inds")]
-
+grp_include <- grp_include[str_detect(grp_include, "sfty|poff|chp")]
 
 
 ## Active members
@@ -474,7 +502,7 @@ df_n_actives_tier <-
   group_by(yos, ea) %>% 
   summarise(salary   = weighted.mean(salary, nactives, na.rm = TRUE) %>% na2zero(),
             nactives = sum(nactives, na.rm= TRUE) %>% na2zero,
-            .groups = "rowwise") %>% 
+            .groups = "drop") %>% 
   mutate(grp = tier_name,
          age = ea + yos) %>% 
   relocate(grp) %>% 
