@@ -95,7 +95,7 @@ df_memo_stch %>% filter(order_geoReturn == 10, year == 2030) %>% kable(digits = 
 
 
 save(df_memo_det1, df_memo_det2, df_memo_stch, 
-     file = "analysis/outputs_analysis/dfs_memo.RData")
+     file = "analysis/outputs_analysis/dfs_memo2.RData")
 
 
 xlsx::write.xlsx2(df_memo_det1 %>% filter(year %in% c(2018, 2025, 2028, 2030)),

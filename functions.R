@@ -151,6 +151,7 @@ get_PVFB <- function(px, v, TC){ # present values of subsets of TC (fixed end)
 # get_PVFB(rep(0.98, 65), 0.08, rep(1.1, 65))
 # )
 
+
 # 1.4 NC of UC and PUC
 get_NC.UC <- function(px, v, TC){
   # This function is a variation of get_PVFB. It is used to calculate NC under UC and PUC methods.
