@@ -513,7 +513,8 @@ df_n_servRet_tier <-
   arrange(age) %>% 
   ungroup()
 
-# CalPERS: Check total benefit againt the AV value
+# CalPERS: Check total benefit againt the AV value (AV2018 ep141-145)
+# Note payments for beneficiaries (death after retirement) are included
 # (df_n_servRet_tier$n_servRet*df_n_servRet_tier$benefit_servRet) %>% sum
 # model/target:5867048719/5880795001 = 99.77%
 

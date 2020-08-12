@@ -78,30 +78,7 @@
 
 
 
-
-#*******************************************************************************
-#                      ## Global settings  ####
-#*******************************************************************************
-
-dir_data    <- "inputs/data_proc/"
-dir_outputs <- "model/tiers/tierData/"
-
-
-# Model settings
-range_age <- 20:110
-range_ea  <- 20:74  # max retirement age is assumed to be 75 (qxr = 1 at age 75 in AV tables) 
-
-
-
-# Tier specific parameters
-
-tier_name <- "sftyAll"
-age_vben  <- 59 # assumed age of starting receiving deferred retirement benefits
-v.year    <- 5
-fasyears  <- 1  # based on policy before PEPRA
-bfactor   <- 0.03
-cola_assumed <- 0.02 # assumed cola rates for valuation  
-EEC_rate  <- 0.116
+## Assumptions, needs to be revisited 
 
 # Notes on aggregate EEC rate:
 #  -  calculated based on covered payroll and EEC in AV2018 np17-19
@@ -130,6 +107,36 @@ EEC_rate  <- 0.116
 
 # Need to combine two types of disability mortality rates: using weighted average
 #  - assume 50% of disability retirement is job-related
+# -  used in df_qxm.post_tier and df_qxm.post_proj_tier
+
+# Assumed inflation in salary scale: salScale.infl = 0.0275
+
+
+
+
+#*******************************************************************************
+#                      ## Global settings  ####
+#*******************************************************************************
+
+dir_data    <- "inputs/data_proc/"
+dir_outputs <- "model/tiers/tierData/"
+
+
+# Model settings
+range_age <- 20:110
+range_ea  <- 20:74  # max retirement age is assumed to be 75 (qxr = 1 at age 75 in AV tables) 
+
+
+
+# Tier specific parameters
+
+tier_name <- "sftyAll"
+age_vben  <- 59 # assumed age of starting receiving deferred retirement benefits
+v.year    <- 5
+fasyears  <- 1  # based on policy before PEPRA
+bfactor   <- 0.03
+cola_assumed <- 0.02 # assumed cola rates for valuation  
+EEC_rate  <- 0.116
 
 
 
@@ -193,7 +200,7 @@ wgts[wgts$grp == "chp","wgt"]  <- 0.0672 + 0.0278
 # wgts
 
 ## calculate weighted average
-# Need to combine two types of disability rates: adding the two rates
+# Need to combine the two types of disability rates: adding the two rates
 
 df_qxd_tier <- 
   df_qxd_imputed %>% 
@@ -268,7 +275,7 @@ df_qxt.vest_tier <-
   ungroup()
 
 
-## combine two types of termination rates
+## combine two types of termination rates: adding up the two types of rate
 df_qxt_tier <- 
   left_join(df_qxt.vest_tier,
             df_qxt.refund_tier,
@@ -304,7 +311,7 @@ df_qxm.post_tier <-
   mutate(qxm.post         = 0.9 * qxm.post_female + 0.1 * qxm.post_male,
          qxmd.post.nonocc = 0.9 * qxmd.post.nonocc_female + 0.1 * qxmd.post.nonocc_male,
          qxmd.post.occ    = 0.9 * qxmd.post.occ_female    + 0.1 * qxmd.post.occ_male,
-         qxmd.post        = 0.5 * qxmd.post.nonocc + 0.5 * qxmd.post.occ,
+         qxmd.post        = 0.5 * qxmd.post.nonocc + 0.5 * qxmd.post.occ, 
          grp = tier_name
   ) %>% 
   select(grp, age, 
@@ -316,12 +323,14 @@ df_qxm.post_tier <-
 
 
 ## Post-retirement mortality, with projection
+ # This will be used to construct improvment table
+
 df_qxm.post_proj_tier <-  
   df_qxm.post_proj_imputed %>% 
   mutate(qxm.post_proj         = 0.9 * qxm.post_female_proj + 0.1 * qxm.post_male_proj,
          qxmd.post.nonocc_proj = 0.9 * qxmd.post.nonocc_female_proj + 0.1 * qxmd.post.nonocc_male_proj,
          qxmd.post.occ_proj    = 0.9 * qxmd.post.occ_female_proj    + 0.1 * qxmd.post.occ_male_proj,
-         qxmd.post_proj        = 0.9 * qxmd.post.nonocc_proj + 0.1 * qxmd.post.occ_proj,
+         qxmd.post_proj        = 0.5 * qxmd.post.nonocc_proj + 0.5 * qxmd.post.occ_proj,
          grp = tier_name
   ) %>% 
   select(grp, age, 
@@ -380,10 +389,20 @@ decrements_tier <- expand.grid(age = range_age,
 #        ## Decrements 3: adding eligibility information ####
 #*******************************************************************************
 
+#' Service retirement:
+#'   Use 50/5  3%@50 (constant 3%) for now, may want to adjust the benefit factor downward
+#'   to account for the lower benefit  
+#' Vesting: 5 years
+
+
+
 # Create 2 columns for each tier
  # elig_servRet_full:  number of year of being eligible for full or greater retirement benefits
  # elig_servRet_early: number of year of being eligible for early retirement benefits; 
  #             0 after being eligible for full retirement benefits
+
+# For safety tier with 3%@50 benefit rule, may want to set full and early retirement age the same 
+
 
 decrements_tier  %<>% 
   group_by(ea) %>% 
@@ -410,13 +429,14 @@ decrements_tier  %<>%
 
 
 
-
-
 #*******************************************************************************
 #                      ## Decrements 4: Improvement table  ####
 #*******************************************************************************
 
-# improvement for post retirement mortality
+# Improvement for post retirement mortality
+
+# For CalPERS (PERF A), we assume linear improvement from the current rates to
+# the projected rates over 15 years. 
 
 decrements_improvement <- 
   expand_grid(year =  2017:(2017+14),
@@ -509,9 +529,10 @@ df_n_actives_tier <-
   arrange(ea, age) %>% 
   ungroup()
 
-# CalPERS: Check total benefit againt the AV value: payroll
+# CalPERS: Check total benefit againt the AV value: payroll (AV2018 ep20-22)
 # sum(df_n_actives_tier$nactives * df_n_actives_tier$salary)
-# model/target: 12951558687/12950836352 = 100.0056%
+# model/target: 6710663988/(2316124913 + 3522647266 + 871895121) = 99.99%
+
 
 
 
@@ -541,9 +562,12 @@ df_n_servRet_tier <-
   arrange(age) %>% 
   ungroup()
 
-# CalPERS: Check total benefit againt the AV value
+# CalPERS: Check total benefit againt the AV value (AV2018 ep141-145)
+# Note payments for beneficiaries (death after retirement) are included
 # (df_n_servRet_tier$n_servRet*df_n_servRet_tier$benefit_servRet) %>% sum
-# model/target:5867048719/5880795001 = 99.77%
+# model/target:2492264817/2492264816 = 100%
+
+
 
 
 
@@ -572,10 +596,9 @@ df_n_disbRet_tier <-
   arrange(age) %>% 
   ungroup()
 
-# CalPERS: Check total benefit againt the AV value
+# CalPERS: Check total benefit againt the AV value (AV2018 ep141-145)
 # (df_n_disbRet_tier$n_disbRet*df_n_disbRet_tier$benefit_disbRet) %>% sum
-# model/target:225566624/225566841 = 99.9999%
-
+# model/target:773929137/ 774100780 = 99.97783%
 
 ## View the results
 # df_n_actives_tier
