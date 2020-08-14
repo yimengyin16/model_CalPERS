@@ -49,7 +49,7 @@ val_runList <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) %>
 #                    ### Run valuations   ####                      
 #*******************************************************************************
 
-source("model/valuation/model_val_create_Dev_2tiers.R")
+source("model/valuation/model_val_create_Dev_2tiers(2).R")
 
 for (val_name_run in val_runList$val_name){
   # val_name_run <- val_runList$val_name[1]

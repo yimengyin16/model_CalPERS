@@ -1,0 +1,70 @@
+---
+title: "CalPERS State plan & policy options: \npreliminary results for discussion"
+output: html_notebook
+---
+
+
+
+# Overview
+
+We present below early results of our analysis for CalPERS state miscellaneous and industrial members of PERF A, a large subgroup of CalPERS state. We tackled this group first so that we could have preliminary results that account for much of CalPERS. 
+
+By assets, this group accounts for approximately 62% of CalPERS state and 23% of CalPERS in its entirety. We have modeled this group under current policy and under three alternative policies that test the bounds of what might be possible. The three policies are:
+
+1. Benefit factor reduction: For all future years of service for all active employees, a 1 percentage
+point reduction in the “benefit factor.” (The benefit factor is multiplied by a plan member’s final
+salary and years of service to determine the initial retirement benefit.) This is far more
+aggressive than the policies that have been tested in “California Rule” litigation, which have
+focused on much narrower scaling back of future benefits (e.g., disallowing “air time”).
+
+2. COLA suspension: The COLA/escalator is suspended until the plan is fully funded under the plan-
+chosen actuarial discount rate.
+
+3. Both policies combined: The benefit factor is reduced by 1 percentage point and the COLA is
+suspended until the plan is fully funded.
+
+We assume all policies go fully into effect in the first year. The benefit factor reduction affects future
+service of current workers and all service of new hires. The COLA suspension affects all current retirees,
+all current workers, and all new hires.
+
+These policies help define bounds. Variants that (1) provide lesser reductions for older retirees, or all
+retirees, or workers who are close to retirement, or (2) reduce the benefit factor by less or allow partial
+COLAs, or (3) apply only to new hires would provide lower fiscal savings and greater protection to plan
+members.
+
+We examined these policies under two assumptions about how California governments would respond:
+
+1. Variant A: Take the savings now, in lower contributions: All three policies reduce actuarial
+liability, unfunded liability, and normal cost. Lower normal cost and amortization cost reduce
+the actuarially determined contribution (ADC). Under this variant employers pay just the ADC,
+which would be lower than what they pay now.
+
+2. Variant B: Maintain employer contributions despite the ADC reduction: Even though the ADC is
+lower, employers pay the ADC plus an additional contribution to keep their payments near
+where they were before, reducing unfunded liability more quickly than otherwise. However, this
+can interact with the contingent COLA: if full funding is reached sooner, then benefit payments
+will go up as the COLA is put back into effect.
+
+
+
+In the tables below we show results for 2018 (the actuarial valuation year and our first year) and for
+2028. The model goes out much further in time and it can be useful to pay attention to later time
+periods as well to gain a better understanding of investment risks and amortization policies.
+We have examined these policies and variants under three investment scenarios:
+
+1. Deterministic: 7% investment return assumption achieved every year. This is the CalPERS
+assumption, save for any planned earnings assumption reductions.
+
+2. Deterministic asset shock: This is based loosely on stress-test scenarios used by Pew, which in
+turn are based loosely on Dodd-Frank assumptions. We assume 7% return in 2018, 2% in 2019,
+negative 24% in 2020, then 3 years of 12% (2021-2023), then 7% annually thereafter.
+
+3. Stochastic: 7% expected mean return, 12% standard deviation: This allows us to see how the
+policies, particularly the contingent COLA policy, interact with investment return volatility.
+The tables below provide summary results for the deterministic scenarios. We will add tables for the
+stochastic return scenario in a later iteration.
+
+# Preliminary results
+
+
+

@@ -70,7 +70,7 @@ min_year         <- min_year_actives
 
 
 ## Start_year for actives specified above needs to be supplemented by combinations 
-#  needed byall types of beneficiaries. 
+#  needed by all types of beneficiaries. 
 #   - Service retirees: combinations can be obtained from    tierData$df_n_servRet
 #   - Disability retirees: combinations can be obtained from tierData$df_n_disbRet
 
@@ -132,13 +132,16 @@ liab_active %<>%
     ## COLA (for compound cola, will not be used for benefits with flexible COLA)
     COLA.scale_compound = (1 + cola_assumed)^(age - min(age)),     # later we can specify other kinds of COLA scale. Note that these are NOT COLA factors. They are used to derive COLA factors for different retirement ages.
     
-    ## Accrued service retirement benefits 
+    ## LEGACY: Accrued service retirement benefits 
     # Bx = na2zero(bfactor * yos * fas), # simple formula for accrued benefits, 
     #                                    # note that only Bx for ages above min retirement age are necessary under EAN.
     # 
     
     # Bx = na2zero(benfactor * yos * fas),                        # accrued benefits
-    bfactor_vec = ifelse(year >= year_reduction, bfactor - bfactor_reduction, bfactor),
+    
+    # Base benefit factor, may be subject to further adjustments, such as early retirement 
+    # bfactor_vec = ifelse(year >= year_reduction, bfactor - bfactor_reduction, bfactor),
+    bfactor_vec = ifelse(year >= year_reduction, bfactor * (1 - bfactor_reduction), bfactor),
     bfactor_vec = ifelse(yos  == 0, 0, bfactor_vec),
     bfactor_vec = (1 + cali_bfactor) * bfactor_vec,
     Bx = na2zero(cumsum(bfactor_vec) * fas),
@@ -241,9 +244,13 @@ liab_active %<>%
 		
 		# Benefit reduction factors
 		benReduction = case_when(
-			tier_name %in% c("miscAll") & age %in% 50:55 ~ 1 - (55 - age) * 0.09,
-			tier_name %in% c("miscAll") & age %in% 59:63 ~ 1 + (age - 55) * 0.03125,
-			tier_name %in% c("miscAll") & age > 63 ~ 1.25,
+			grp %in% c("miscAll") & age %in% 50:55 ~ 1 - (55 - age) * 0.09,
+			grp %in% c("miscAll") & age %in% 59:63 ~ 1 + (age - 55) * 0.03125,
+			grp %in% c("miscAll") & age > 63 ~ 1.25,
+			
+			# TEMP: assuming constant benefit factor for safety members (similar to the 3%@50 rule for POFF )
+			grp %in% c("sftyAll") ~ 1,
+			
 			TRUE ~ 1),
 		
 		# Retirement eligibility and % benefit can be claimed at retirement 
@@ -276,14 +283,18 @@ liab_servRet.la_init <-
 				 start_year = init_year - (age_servRet - ea)) %>% 
 	filter(# age >= ea, 
 		     age >= age_servRet) %>% 
-	left_join(tierData$df_n_servRet %>% select(start_year, ea, age, age_servRet, benefit_servRet), by = c("ea", "age", "start_year", "age_servRet")) %>% 
-	left_join(liab_active %>% select(start_year, ea, age, pxm_servRet, ax.servRet), by = c("age", "ea", "start_year")) %>% 
+	left_join(tierData$df_n_servRet %>% 
+	            select(start_year, ea, age, age_servRet, benefit_servRet), by = c("ea", "age", "start_year", "age_servRet")) %>% 
+	left_join(liab_active %>% 
+	            select(start_year, ea, age, pxm_servRet, ax.servRet), by = c("age", "ea", "start_year")) %>% 
 	group_by(start_year, age_servRet, ea) %>% 
 	mutate(year_servRet = start_year + age_servRet - ea, 
 				 year = start_year + age - ea,
 				 COLA.scale_compound = (1 + cola_assumed)^(age - min(age)), # may not be used under flexible COLA
 				 
 				 # Annual benefit payments
+				 # more complex benefit streams can be specified
+				 # IMPROVEMENT: can be combined with future members
 				 B.servRet.la    = benefit_servRet[age == age_servRet] * COLA.scale_compound / COLA.scale_compound[age == age_servRet],
 
 				 #calibration
@@ -600,16 +611,28 @@ cat("Disability Retirement - actives")
 
 # Calculate normal costs and liabilities of retirement benefits with multiple retirement ages
 liab_active %<>% 
-  mutate( gx.disbRet  = yos >= 5,
-  				# yos_proj_disbRet = ifelse(age <= 60, 60 - ea, yos), 
+  mutate( gx.disbRet  = case_when(
+                          grp %in% c("miscAll") ~ as.numeric(yos >= 5),
+                          grp %in% c("sftyAll") ~ 1,
+                          TRUE ~ 0
+                          ),
+  				
+          # yos_proj_disbRet = ifelse(age <= 60, 60 - ea, yos), 
   				yos_proj_disbRet = case_when(
   				  yos < 10 | yos > 18 ~ yos,
   				  TRUE ~ 60-ea
   				), 
   				
-  				# PERF A non-industrial disability benefit policy
-  				Bx.disbRet  = gx.disbRet * pmin(1/3 * fas, 0.018 * yos_proj_disbRet * fas, na.rm = TRUE),
-          
+  			
+  				Bx.disbRet  = case_when(
+  				    # PERF A non-industrial disability benefit policy
+  				    grp %in% c("miscAll") ~ gx.disbRet * pmin(1/3 * fas, 0.018 * yos_proj_disbRet * fas, na.rm = TRUE),
+  				    
+  				    # PERF A industrial disability benefit policy
+  				    grp %in% c("sftyAll") ~ gx.disbRet * 0.5 * fas,
+  				    TRUE ~ 0
+  				  ),
+  				  
   				# Bx.disbRet = Bx.disbRet * adj_fct.act.disbRet, #calibration
   				 
           # This is the benefit level if the employee starts to CLAIM benefit at age x, not internally retire at age x.
@@ -762,7 +785,7 @@ cat("Death Benefits - actives")
 liab_active %<>%
 	mutate( gx.death  = 1,
 					
-					# simplifed PERF A basic death benefit policy
+					# Simplifed PERF A basic death benefit policy
 					Bx.death = 2 * sx * gx.death,   # pmax(0, gx.death * sx * 3 - 50000),
 					
 					# Bx.death = Bx.death * adj_fct.act.death, #calibration
@@ -873,21 +896,21 @@ liab_active %<>% ungroup %>% select(start_year, year, ea, age, everything())
 
 
 # Choosing AL and NC variables corresponding to the chosen acturial method
-ALx.servRet.laca.method     <- paste0("ALx.", actuarial_method, ".servRet.laca")
-NCx.servRet.laca.method     <- paste0("NCx.", actuarial_method, ".servRet.laca")
-PVFNCx.servRet.laca.method   <- paste0("PVFNCx.", actuarial_method, ".servRet.laca")
+ALx.servRet.laca.method     <- paste0("ALx.",    actuarial_method, ".servRet.laca")
+NCx.servRet.laca.method     <- paste0("NCx.",    actuarial_method, ".servRet.laca")
+PVFNCx.servRet.laca.method  <- paste0("PVFNCx.", actuarial_method, ".servRet.laca")
 
 ALx.defrRet.method    <- paste0("ALx.",   actuarial_method, ".defrRet")
 NCx.defrRet.method    <- paste0("NCx.",   actuarial_method, ".defrRet")
-PVFNCx.defrRet.method  <- paste0("PVFNCx.", actuarial_method, ".defrRet")
+PVFNCx.defrRet.method <- paste0("PVFNCx.",actuarial_method, ".defrRet")
 
 ALx.disbRet.method     <- paste0("ALx.",   actuarial_method, ".disbRet")
 NCx.disbRet.method     <- paste0("NCx.",   actuarial_method, ".disbRet")
-PVFNCx.disbRet.method   <- paste0("PVFNCx.", actuarial_method, ".disbRet")
+PVFNCx.disbRet.method  <- paste0("PVFNCx.",actuarial_method, ".disbRet")
 
-ALx.death.method   <- paste0("ALx.",   actuarial_method, ".death")
-NCx.death.method   <- paste0("NCx.",   actuarial_method, ".death")
-PVFNCx.death.method <- paste0("PVFNCx.", actuarial_method, ".death")
+ALx.death.method    <- paste0("ALx.",   actuarial_method, ".death")
+NCx.death.method    <- paste0("NCx.",   actuarial_method, ".death")
+PVFNCx.death.method <- paste0("PVFNCx.",actuarial_method, ".death")
 
 
 

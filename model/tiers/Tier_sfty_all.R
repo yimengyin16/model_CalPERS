@@ -290,8 +290,8 @@ df_qxt_tier <-
 ## Pre-retirement mortality
 df_qxm.pre_tier <-  
   df_qxm.pre_imputed %>% 
-  mutate(qxm.pre.nonocc = 0.9 * qxm.pre.nonocc_female + 0.1 * qxm.pre.nonocc_male,
-         qxm.pre.occ    = 0.9 * qxm.pre.occ_female    + 0.1 * qxm.pre.occ_male,
+  mutate(qxm.pre.nonocc = 0.1 * qxm.pre.nonocc_female + 0.9 * qxm.pre.nonocc_male,
+         qxm.pre.occ    = 0.1 * qxm.pre.occ_female    + 0.9 * qxm.pre.occ_male,
          qxm.pre = qxm.pre.nonocc + qxm.pre.occ,
          grp = tier_name
          ) %>% 
@@ -308,10 +308,10 @@ df_qxm.pre_tier <-
 
 df_qxm.post_tier <-  
   df_qxm.post_imputed %>% 
-  mutate(qxm.post         = 0.9 * qxm.post_female + 0.1 * qxm.post_male,
-         qxmd.post.nonocc = 0.9 * qxmd.post.nonocc_female + 0.1 * qxmd.post.nonocc_male,
-         qxmd.post.occ    = 0.9 * qxmd.post.occ_female    + 0.1 * qxmd.post.occ_male,
-         qxmd.post        = 0.5 * qxmd.post.nonocc + 0.5 * qxmd.post.occ, 
+  mutate(qxm.post         = 0.1 * qxm.post_female         + 0.9 * qxm.post_male,
+         qxmd.post.nonocc = 0.1 * qxmd.post.nonocc_female + 0.9 * qxmd.post.nonocc_male,
+         qxmd.post.occ    = 0.1 * qxmd.post.occ_female    + 0.9 * qxmd.post.occ_male,
+         qxmd.post        = 0.5 * qxmd.post.nonocc        + 0.5 * qxmd.post.occ, 
          grp = tier_name
   ) %>% 
   select(grp, age, 
@@ -327,10 +327,10 @@ df_qxm.post_tier <-
 
 df_qxm.post_proj_tier <-  
   df_qxm.post_proj_imputed %>% 
-  mutate(qxm.post_proj         = 0.9 * qxm.post_female_proj + 0.1 * qxm.post_male_proj,
-         qxmd.post.nonocc_proj = 0.9 * qxmd.post.nonocc_female_proj + 0.1 * qxmd.post.nonocc_male_proj,
-         qxmd.post.occ_proj    = 0.9 * qxmd.post.occ_female_proj    + 0.1 * qxmd.post.occ_male_proj,
-         qxmd.post_proj        = 0.5 * qxmd.post.nonocc_proj + 0.5 * qxmd.post.occ_proj,
+  mutate(qxm.post_proj         = 0.1 * qxm.post_female_proj         + 0.9 * qxm.post_male_proj,
+         qxmd.post.nonocc_proj = 0.1 * qxmd.post.nonocc_female_proj + 0.9 * qxmd.post.nonocc_male_proj,
+         qxmd.post.occ_proj    = 0.1 * qxmd.post.occ_female_proj    + 0.9 * qxmd.post.occ_male_proj,
+         qxmd.post_proj        = 0.5 * qxmd.post.nonocc_proj        + 0.5 * qxmd.post.occ_proj,
          grp = tier_name
   ) %>% 
   select(grp, age, 

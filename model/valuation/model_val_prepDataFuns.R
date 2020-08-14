@@ -342,8 +342,9 @@ expand_decrements <- function(tierData,
   # dims of decrement_ter: ea x age
   # dims of expanded decrement table: year x ea x age
   
-  # range_start_year <- 1915:(init_year + nyear - 1) # starting from 1915 is more than enough, just be safe
-  range_year_decrements <- 1915:(init_year + nyear + max_age) # starting from 1915 is more than enough, just be safe
+  # range_start_year <- 1915:(init_year + nyear - 1) 
+  # starting from 1915 is more than enough, just be safe
+  range_year_decrements <- 1915:(init_year + nyear + max_age) 
   
   decrements_tier_expanded <- 
     expand_grid(year = range_year_decrements,
@@ -430,17 +431,32 @@ apply_decImprovements <- function(tierData,
   ## Should use the same set of weights when constructing tier 
   
   ## TODO: This does not belong to this function, need figure out how to move it to other functions
-
-  decrements_expanded %<>% 
+   
+  if(tierData$tier_name == "miscAll"){
+    decrements_expanded %<>% 
     mutate(
-      qxm.post         = 0.6 * qxm.post_female + 0.4 * qxm.post_male,
-      qxmd.post.nonocc = 0.6 * qxmd.post.nonocc_female + 0.4 * qxmd.post.nonocc_male,
-      qxmd.post.occ    = 0.9 * qxmd.post.occ_female    + 0.1 * qxmd.post.occ_male,
-      qxmd.post        = 0.8 * qxmd.post.nonocc + 0.2 * qxmd.post.occ
+      qxm.post         = 0.1 * qxm.post_female         + 0.9 * qxm.post_male,
+      qxmd.post.nonocc = 0.1 * qxmd.post.nonocc_female + 0.9 * qxmd.post.nonocc_male,
+      qxmd.post.occ    = 0.1 * qxmd.post.occ_female    + 0.9 * qxmd.post.occ_male,
+      qxmd.post        = 0.5 * qxmd.post.nonocc        + 0.5 * qxmd.post.occ
     ) %>% 
     colwise(na2zero)(.) %>% 
     ungroup
+  }
   
+  if(tierData$tier_name == "sftyAll"){
+    decrements_expanded %<>% 
+      mutate(
+        qxm.post         = 0.1 * qxm.post_female         + 0.9 * qxm.post_male,
+        qxmd.post.nonocc = 0.1 * qxmd.post.nonocc_female + 0.9 * qxmd.post.nonocc_male,
+        qxmd.post.occ    = 0.1 * qxmd.post.occ_female    + 0.9 * qxmd.post.occ_male,
+        qxmd.post        = 0.5 * qxmd.post.nonocc        + 0.5 * qxmd.post.occ
+      ) %>% 
+      colwise(na2zero)(.) %>% 
+      ungroup
+  }
+  
+    
   ## Calibration
   decrements_expanded %<>%  
     mutate(qxm.post = (1 + calib_qxm.post) * qxm.post)

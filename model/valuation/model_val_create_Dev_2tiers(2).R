@@ -71,12 +71,21 @@ val_paramlist$tier_include <-  rlang::parse_expr(paste0("c(", val_paramlist$tier
 # Load tier data
 dir_tierData <- "model/tiers/tierData/"
 
+
+ls_tierData <- list()
+
 for (tierName in val_paramlist$tier_include){
-  assign(paste0("tierData_", tierName), 
-         readRDS(paste0(dir_tierData, "tierData_", tierName,  ".rds" )))
+  ls_tierData[[tierName]] <- 
+         readRDS(paste0(dir_tierData, "tierData_", tierName,  ".rds" ))
   }
 
-# tierData_miscAll
+
+# for (tierName in val_paramlist$tier_include){
+#   assign(paste0("tierData_", tierName), 
+#          readRDS(paste0(dir_tierData, "tierData_", tierName,  ".rds" )))
+#   }
+
+# ls_tierData$sftyAll
 
 
 
@@ -90,31 +99,34 @@ source("model/valuation/model_val_prepDataFuns.R", local = TRUE)
 
 ## Modify tier parameters as specified in the parameter list   
 # !! This should be run before any further operations!!
-tierData_miscAll <- adj_tierParams(tierData_miscAll)
+ls_tierData[[1]] <- adj_tierParams(ls_tierData[[1]])
 
 
 ## 1. Full salary schedule
-tierData_miscAll <- add_salary_full(tierData_miscAll)
+ls_tierData[[1]] <- add_salary_full(ls_tierData[[1]])
 
 
 # 2. Distribution of new entrants
-tierData_miscAll <- add_entrantsDist(tierData_miscAll)
+ls_tierData[[1]] <- add_entrantsDist(ls_tierData[[1]])
 
 
 # 3. Adjustments to retirement rates
-tierData_miscAll <- adj_retRates(tierData_miscAll)
+ls_tierData[[1]] <- adj_retRates(ls_tierData[[1]])
 
 
 # 4. Create a generational decrement table
-tierData_miscAll <- expand_decrements(tierData_miscAll)
+ls_tierData[[1]] <- expand_decrements(ls_tierData[[1]])
 
 
 # 5. apply improvements
-tierData_miscAll <- apply_decImprovements(tierData_miscAll)
+# TODO: to be updated 
+# This step includes calibration of post-retirement mortality
+ls_tierData[[1]] <- apply_decImprovements(ls_tierData[[1]])
 
 
 # 6. Adjustments to initial members
-tierData_miscAll <- adj_initMembers(tierData_miscAll)
+# This stip includes calibration of benefit payments in year 1
+ls_tierData[[1]] <- adj_initMembers(ls_tierData[[1]])
 
 
 
@@ -124,18 +136,19 @@ tierData_miscAll <- adj_initMembers(tierData_miscAll)
 invisible(gc())
 source("model/valuation/model_val_demographics_singleTier.R", local = TRUE)
 
-pop <- get_demographics(tierData_miscAll)
 
+pop <- get_demographics(ls_tierData[[1]])
+# Note that the function returns a list
 
 
 #*******************************************************************************
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation/model_val_indivLiab_flexbf.R", local = TRUE)
+source("model/valuation/model_val_indivLiab_flexbf(2).R", local = TRUE)
 
 indivLiab <- list()
-indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLiab(tierData_miscAll)
+indivLiab[[val_paramlist$tier_include[1]]] <- get_indivLiab(ls_tierData[[1]])
 
 
 
@@ -209,8 +222,19 @@ if (val_paramlist$estInitTerm){
 
 load(filePath_planInfo) # %>% print
 
+init_amort_include <- character()
+
+if(any(str_detect(val_paramlist$tier_include, "miscAll"))){
+  init_amort_include <- c(init_amort_include, c("misc", "inds"))
+  }
+
+if(any(str_detect(val_paramlist$tier_include, "sftyAll"))){
+  init_amort_include <- c(init_amort_include, c("sfty", "poff", "chp"))
+}
+
+
 init_amort_raw_val <- init_amort_raw %>% 
-  filter(grp %in% c("misc", "inds") )
+  filter(grp %in% init_amort_include)
 
 init_unrecReturns.unadj_val <- init_unrecReturns.unadj
 

@@ -76,12 +76,12 @@ i.r[1:10, 1:5]
 #                          Simulation ####
 #*******************************************************************************
 
-if(sim_paramlist$useContingentCOLA){
-  source("model/simulation/model_sim_simulation_contingentCOLA.R")
-} else {
-  source("model/simulation/model_sim_simulation.R")
-}
-
+# if(sim_paramlist$useContingentCOLA){
+#   source("model/simulation/model_sim_simulation_contingentCOLA.R")
+# } else {
+#   source("model/simulation/model_sim_simulation.R")
+# }
+source("model/simulation/model_sim_simulation_contingentCOLA(2).R")
 
 
 {
