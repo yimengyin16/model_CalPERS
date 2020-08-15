@@ -2,6 +2,8 @@
 #              Loading libraries             #  
 #*********************************************
 
+
+library(flextable)
 library(data.table)
 library(plyr) # must be loaded BEFORE dplyr/tidyverse
 library(gdata) # read.xls

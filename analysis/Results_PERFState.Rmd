@@ -1,52 +1,80 @@
 ---
 title: "CalPERS State plan & policy options: \npreliminary results for discussion"
-output: html_notebook
+output: 
+  html_notebook: 
+    toc: yes
+    number_sections: yes
+editor_options: 
+  chunk_output_type: inline
 ---
 
 
 
-# Overview
+# **Overview**
 
-We present below early results of our analysis for CalPERS state miscellaneous and industrial members of PERF A, a large subgroup of CalPERS state. We tackled this group first so that we could have preliminary results that account for much of CalPERS. 
+We present below early results of our analysis for CalPERS state members of PERF A. 
 
-By assets, this group accounts for approximately 62% of CalPERS state and 23% of CalPERS in its entirety. We have modeled this group under current policy and under three alternative policies that test the bounds of what might be possible. The three policies are:
 
-1. Benefit factor reduction: For all future years of service for all active employees, a 1 percentage
-point reduction in the “benefit factor.” (The benefit factor is multiplied by a plan member’s final
-salary and years of service to determine the initial retirement benefit.) This is far more
-aggressive than the policies that have been tested in “California Rule” litigation, which have
-focused on much narrower scaling back of future benefits (e.g., disallowing “air time”).
+## Types of members
+There are five types of state members in PERF A and currently we categorize and model them as two groups based on the similarity of benefit policies and member characteristics:
 
-2. COLA suspension: The COLA/escalator is suspended until the plan is fully funded under the plan-
-chosen actuarial discount rate.
+- **Group 1**: State miscellaneous and state industrial members. 
+- **Group 2**: State safety members, state peace officers/firefighters (POFF), and California Highway Patrol (CHP)
 
-3. Both policies combined: The benefit factor is reduced by 1 percentage point and the COLA is
-suspended until the plan is fully funded.
+(TODO: We are going to distinguish classic and PEPRA members in each group in the next iteration)
+
+See appendix for a diagram that summarizes the types of state members of PERF A. 
+
+
+## Policy scenarios
+We have modeled each group under current policy and under three types of alternative policies, each with several variants differing in the degree that benefits are affected:
+
+1. Benefit factor reduction: For all future years of service for all active employees, an x% reduction in the “benefit factor.” (The benefit factor is multiplied by a plan member’s final salary and years of service to determine the initial retirement benefit.) This is far more aggressive than the policies that have been tested in “California Rule” litigation, which have
+focused on much narrower scaling back of future benefits (e.g., disallowing “air time”). Variants:
+  
+    - 50% reduction to benefit factor.
+    - 25% reduction to benefit factor.
+    - (Example: If the original benefit factor is 3%, it will become 2.25% after a 25% reduction )
+
+2. COLA suspension: The COLA/escalator is suspended or reduced until the plan's funded ratio reaches a certain level. Variants:
+
+    - COLA is fully suspended until the plan is fully funded under the plan chosen actuarial discount rate (7%).
+    - COLA is reduced from 2% to 1% per year until the plan is fully funded under the plan chosen actuarial discount rate (7%).
+    - (TODO) COLA is reduced from 2% to 1% per year until the plan is fully funded under a more conservative discount rate (5%). (Similar to the Rhode Island plan) 
+    
+
+3. Both policies combined: The benefit factor is reduced and the COLA is
+suspended/reduced. Variants:
+
+    - 50% benefit factor reduction + full COLA suspension until full funding (7% discount rate)
+    - 25% benefit factor reduction + COLA reduced to half (1%) until full funding (7% discount rate)  
 
 We assume all policies go fully into effect in the first year. The benefit factor reduction affects future
 service of current workers and all service of new hires. The COLA suspension affects all current retirees,
 all current workers, and all new hires.
 
-These policies help define bounds. Variants that (1) provide lesser reductions for older retirees, or all
-retirees, or workers who are close to retirement, or (2) reduce the benefit factor by less or allow partial
-COLAs, or (3) apply only to new hires would provide lower fiscal savings and greater protection to plan
+
+The policies with greater benefit reductions help define bounds, and the policies with lesser benefit reductions are closer to what might be practical for policymakers. 
+
+Additional variants that we may explore in the future: (1) providing lesser reductions for older retirees or workers who are close to retirement, (2) apply only to new hires. These variants would provide lower fiscal savings and greater protection to plan
 members.
 
+## Assumptions on how CA governments would respond 
 We examined these policies under two assumptions about how California governments would respond:
 
-1. Variant A: Take the savings now, in lower contributions: All three policies reduce actuarial
+1. Assumption A: Take the savings now, in lower contributions: All policies reduce actuarial
 liability, unfunded liability, and normal cost. Lower normal cost and amortization cost reduce
-the actuarially determined contribution (ADC). Under this variant employers pay just the ADC,
+the actuarially determined contribution (ADC). Under this assumption employers pay just the ADC,
 which would be lower than what they pay now.
 
-2. Variant B: Maintain employer contributions despite the ADC reduction: Even though the ADC is
+2. Assumption B: Maintain employer contributions despite the ADC reduction: Even though the ADC is
 lower, employers pay the ADC plus an additional contribution to keep their payments near
 where they were before, reducing unfunded liability more quickly than otherwise. However, this
 can interact with the contingent COLA: if full funding is reached sooner, then benefit payments
 will go up as the COLA is put back into effect.
 
 
-
+## Investment return scearnios
 In the tables below we show results for 2018 (the actuarial valuation year and our first year) and for
 2028. The model goes out much further in time and it can be useful to pay attention to later time
 periods as well to gain a better understanding of investment risks and amortization policies.
@@ -64,7 +92,182 @@ policies, particularly the contingent COLA policy, interact with investment retu
 The tables below provide summary results for the deterministic scenarios. We will add tables for the
 stochastic return scenario in a later iteration.
 
-# Preliminary results
+# **Preliminary results**
+
+
+## Deterministic results, with 7% annual returns
+
+
+```{r loading results, include=FALSE}
+
+source("libraries.R")
+
+
+dir_sims <- "model/simulation/outputs_sim/"
+
+ls_simNames <- 
+  c("miscAll_baseline",
+    
+    "miscAll_benCut1_lowERC",
+    "miscAll_benCut1_highERC",
+    
+    "miscAll_colaCut1_lowERC",
+    "miscAll_colaCut1_highERC",
+    
+    "miscAll_benCut1&colaCut1_lowERC",
+    "miscAll_benCut1&colaCut1_highERC",
+    
+    "miscAll_benCut2_lowERC",
+    "miscAll_benCut2_highERC",
+    
+    "miscAll_colaCut2_lowERC",
+    "miscAll_colaCut2_highERC",
+    
+    "miscAll_benCut2&colaCut2_lowERC",
+    "miscAll_benCut2&colaCut2_highERC",
+    
+    "sftyAll_baseline",
+    
+    "sftyAll_benCut1_lowERC",
+    "sftyAll_benCut1_highERC",
+    
+    "sftyAll_colaCut1_lowERC",
+    "sftyAll_colaCut1_highERC",
+    
+    "sftyAll_benCut1&colaCut1_lowERC",
+    "sftyAll_benCut1&colsCut1_highERC",
+    
+    "sftyAll_benCut2_lowERC",
+    "sftyAll_benCut2_highERC",
+    
+    "sftyAll_colaCut2_lowERC",
+    "sftyAll_colaCut2_highERC",
+    
+    "sftyAll_benCut2&colaCut2_lowERC",
+    "sftyAll_benCut2&colsCut2_highERC"
+)
+
+
+df_results <- 
+  map(ls_simNames, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
+  bind_rows() %>% 
+  mutate(NC.ER_PR = 100*(NC - EEC)/PR ) %>% 
+  mutate(sim_name = str_replace(sim_name, "&", "_"),
+         sim_name = factor(sim_name, levels = str_replace(ls_simNames, "&", "_")),
+         )
+
+
+vars_report <- c("sim_name","sim", "year", "AL", "UAAL", "FR_MA", "ERC", "ERC_PR", "NC_PR", "NC.ER_PR", "SC_PR")
+vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
+
+```
+
+
+### Assumption A: Employer contributions are reduced to reflect lower actuarially determined contributions
+```{r sftyAll_det_lowERC, echo=FALSE}
+library(officer)
+
+df_sftyAll_det_lowERC <- 
+  df_results %>% 
+  filter(sim == 0,
+         year <= 2030,
+         str_detect(sim_name, "sftyAll"),
+         str_detect(sim_name, "baseline|lowERC")
+         )
+
+
+tab_sftyAll_det_lowERC <- 
+df_sftyAll_det_lowERC %>% 
+  select(any_of(vars_table)) %>% 
+  filter(year %in% c(2018, 2028)) %>% 
+  mutate(AL = AL/1e9,
+         ERC = ERC/1e9) %>% 
+  gather(Var, value, -sim_name, -year) %>% 
+  mutate(Var = factor(Var, levels = c("AL", "ERC", "FR_MA",  "ERC_PR"),
+                           labels = c("Actuarial liability", 
+                                      "Employer contribution(ERC)",
+                                      "Funded ratio, \nMV basis",
+                                      "ERC as % of payroll")      
+                      
+                      )) %>% 
+  spread(sim_name, value) %>% 
+  arrange(year) %>% 
+  flextable() %>% 
+  add_header_row(values = c("", 
+                            "Policies with greater \nbenefit/COLA reduction", 
+                            "Policies with lesser \nbenefit/COLA reduction"), 
+                 colwidths = c(3,3,3 )) %>% 
+  theme_booktabs() %>% 
+  add_header_row(values = "Assumes investment returns of 7% every year (based on CalPERS assumptions) \nAssumption A: Reduce employer contribution to reflect new lower actuarially determined contribution", 
+								 colwidths = 9) %>% 
+  add_header_row(values = "Group: State safety, POFF, and CHP", 
+								 colwidths = 9) %>%
+  
+  add_header_row(values = "Estimated impacts of selected policy alternatives on CalPERS PERF A, simplified assumptions", 
+								 colwidths = 9) %>% 
+  add_footer_row(values = "Amounts are in $ billions", 
+								 colwidths = 9) %>% 
+ 
+  height(part = "body",   height = .6) %>%
+	height(part = "header", i = 1:2, height = .4) %>%
+	height(part = "header", i = 3, height   = .6) %>%
+  height(part = "header", i = 4, height = .9) %>%
+  height(part = "header", i = 5, height = .9) %>%
+  hrule(rule = "exact", part = "all") %>%
+  width(j = 1, width = 0.6) %>%
+  width(j = 2, width = 0.4) %>%
+	width(j = 3:9, width = 1.6) %>%
+  fontsize(size = 18, part = "header", i = 1:2) %>% 
+  fontsize(size = 15, part = "header", i = 3) %>% 
+  fontsize(size = 14, part = "header", i = 4:5) %>% 
+  fontsize(size = 14, part = "footer", i = 1) %>% 
+  fontsize(size = 14, part = "body", j = 1:9) %>% 
+	# autofit(add_w = 1) %>% 
+	align(j = 1, align = "center", part = "all")  %>%
+  #align(j = 2, align = "center", part = "body")  %>%
+  align(i = 4, align = "center", part = "header")  %>%
+  align(i = 5, align = "right", part = "header")  %>%
+  align(i = 1, align = "left", part = "footer")  %>%
+  merge_v( j = "year") %>% 
+  colformat_num(i = c(1,2,5,6), j = 3:9, digits = 1, prefix = "$") %>% 
+  colformat_num(i = c(3,4,7,8), j = 3:9, digits = 1, suffix = "%") %>% 
+  set_header_labels(values =
+                      list(
+                      year = "Year",
+										  Var  = "Variable",
+										  sftyAll_baseline        = "Baseline \ncurrent policy",
+                      sftyAll_benCut1_lowERC  = "Reduce \nbenefit factor \nby 50%",
+										  sftyAll_colaCut1_lowERC = "No COLA until 100% funded (7% discount)",
+                      sftyAll_benCut1_colaCut1_lowERC = "Both policies(left) \ncombined",
+                      sftyAll_benCut2_lowERC  = "Reduce \nbenefit factor \nby 25%",
+										  sftyAll_colaCut2_lowERC = "Half COLA until 100% funded (7% discount)",
+										  sftyAll_benCut2_colaCut2_lowERC = "Both policies(left) \ncombined"
+										  )
+  ) %>% 
+  hline(part = "body", i = 4, border = fp_border(color="gray40") ) %>% 
+  #hline_bottom(part = "body", border = fp_border(color="gray40") ) %>% 
+  vline(part = "all", j = c(3,6),  border = fp_border(color="gray80") )
+  
+ 
+tab_sftyAll_det_lowERC 
+
+
+```
+
+
+### Assumption B: Employer contributions are approximately maintained despite drop in ADC
+
+
+## Asset shock scenario (24% decline in portfolio)
+
+### Assumption A: Employer contributions are reduced to reflect lower actuarially determined contributions
+
+### Assumption B: Employer contributions are approximately maintained despite drop in ADC
+
+
+# **Appendix**
+![](C:/Git/Proj_CAPlans/model_CalPERS/analysis/PlanInfo.png)
+
 
 
 

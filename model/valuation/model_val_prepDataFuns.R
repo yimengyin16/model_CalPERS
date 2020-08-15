@@ -435,10 +435,10 @@ apply_decImprovements <- function(tierData,
   if(tierData$tier_name == "miscAll"){
     decrements_expanded %<>% 
     mutate(
-      qxm.post         = 0.1 * qxm.post_female         + 0.9 * qxm.post_male,
-      qxmd.post.nonocc = 0.1 * qxmd.post.nonocc_female + 0.9 * qxmd.post.nonocc_male,
+      qxm.post         = 0.6 * qxm.post_female         + 0.4 * qxm.post_male,
+      qxmd.post.nonocc = 0.6 * qxmd.post.nonocc_female + 0.4 * qxmd.post.nonocc_male,
       qxmd.post.occ    = 0.1 * qxmd.post.occ_female    + 0.9 * qxmd.post.occ_male,
-      qxmd.post        = 0.5 * qxmd.post.nonocc        + 0.5 * qxmd.post.occ
+      qxmd.post        = 0.8 * qxmd.post.nonocc        + 0.2 * qxmd.post.occ
     ) %>% 
     colwise(na2zero)(.) %>% 
     ungroup

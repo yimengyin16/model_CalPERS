@@ -275,10 +275,10 @@ df_qxm.pre_tier <-
 
 df_qxm.post_tier <-  
   df_qxm.post_imputed %>% 
-  mutate(qxm.post         = 0.6 * qxm.post_female + 0.4 * qxm.post_male,
+  mutate(qxm.post         = 0.6 * qxm.post_female         + 0.4 * qxm.post_male,
          qxmd.post.nonocc = 0.6 * qxmd.post.nonocc_female + 0.4 * qxmd.post.nonocc_male,
-         qxmd.post.occ    = 0.9 * qxmd.post.occ_female    + 0.1 * qxmd.post.occ_male,
-         qxmd.post        = 0.8 * qxmd.post.nonocc + 0.2 * qxmd.post.occ,
+         qxmd.post.occ    = 0.1 * qxmd.post.occ_female    + 0.9 * qxmd.post.occ_male,
+         qxmd.post        = 0.8 * qxmd.post.nonocc        + 0.2 * qxmd.post.occ,
          grp = tier_name
   ) %>% 
   select(grp, age, 
@@ -292,10 +292,10 @@ df_qxm.post_tier <-
 ## Post-retirement mortality, with projection
 df_qxm.post_proj_tier <-  
   df_qxm.post_proj_imputed %>% 
-  mutate(qxm.post_proj         = 0.6 * qxm.post_female_proj + 0.4 * qxm.post_male_proj,
+  mutate(qxm.post_proj         = 0.6 * qxm.post_female_proj         + 0.4 * qxm.post_male_proj,
          qxmd.post.nonocc_proj = 0.6 * qxmd.post.nonocc_female_proj + 0.4 * qxmd.post.nonocc_male_proj,
-         qxmd.post.occ_proj    = 0.9 * qxmd.post.occ_female_proj    + 0.1 * qxmd.post.occ_male_proj,
-         qxmd.post_proj        = 0.8 * qxmd.post.nonocc_proj + 0.2 * qxmd.post.occ_proj,
+         qxmd.post.occ_proj    = 0.1 * qxmd.post.occ_female_proj    + 0.9 * qxmd.post.occ_male_proj,
+         qxmd.post_proj        = 0.8 * qxmd.post.nonocc_proj        + 0.2 * qxmd.post.occ_proj,
          grp = tier_name
   ) %>% 
   select(grp, age, 
