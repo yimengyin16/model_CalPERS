@@ -42,4 +42,6 @@ template*/**/*.*
 model*/**/*.RData
 model*/**/*.rds
 
+analysis*/**/*.html
+
 ~$*
