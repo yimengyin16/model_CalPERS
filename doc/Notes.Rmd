@@ -44,7 +44,7 @@ knitr::opts_chunk$set(echo = TRUE)
 **Notes on "tidy" data format**
 
 - row indices
-     - `group`: eg. misc_classic_t1, inds_pepra_t2 
+     - `grp`: eg. misc_classic_t1, inds_pepra_t2 
      - `ea`   : entry age
      - `age`  : attained age
      - `yos`  : year of service

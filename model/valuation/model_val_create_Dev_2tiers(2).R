@@ -94,7 +94,7 @@ for (tierName in val_paramlist$tier_include){
 #*******************************************************************************
 #                          Data preparation                                 ####
 #*******************************************************************************
-source("model/valuation/model_val_prepDataFuns.R", local = TRUE)
+source("model/valuation/model_val_prepDataFuns(2).R", local = TRUE)
 
 
 ## Modify tier parameters as specified in the parameter list   

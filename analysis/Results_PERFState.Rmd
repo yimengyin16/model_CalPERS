@@ -1,10 +1,10 @@
 ---
 title: "CalPERS State plan & policy options: \npreliminary results for discussion"
-output: 
-  html_notebook: 
+output:
+  html_notebook:
     toc: yes
     number_sections: yes
-editor_options: 
+editor_options:
   chunk_output_type: inline
 ---
 
@@ -114,8 +114,8 @@ ls_simNames <-
     "miscAll_colaCut1_lowERC",
     "miscAll_colaCut1_highERC",
     
-    "miscAll_benCut1&colaCut1_lowERC",
-    "miscAll_benCut1&colaCut1_highERC",
+    "miscAll_benCut1_colaCut1_lowERC",
+    "miscAll_benCut1_colaCut1_highERC",
     
     "miscAll_benCut2_lowERC",
     "miscAll_benCut2_highERC",
@@ -123,8 +123,8 @@ ls_simNames <-
     "miscAll_colaCut2_lowERC",
     "miscAll_colaCut2_highERC",
     
-    "miscAll_benCut2&colaCut2_lowERC",
-    "miscAll_benCut2&colaCut2_highERC",
+    "miscAll_benCut2_colaCut2_lowERC",
+    "miscAll_benCut2_colaCut2_highERC",
     
     "sftyAll_baseline",
     
@@ -134,8 +134,8 @@ ls_simNames <-
     "sftyAll_colaCut1_lowERC",
     "sftyAll_colaCut1_highERC",
     
-    "sftyAll_benCut1&colaCut1_lowERC",
-    "sftyAll_benCut1&colsCut1_highERC",
+    "sftyAll_benCut1_colaCut1_lowERC",
+    "sftyAll_benCut1_colsCut1_highERC",
     
     "sftyAll_benCut2_lowERC",
     "sftyAll_benCut2_highERC",
@@ -143,8 +143,8 @@ ls_simNames <-
     "sftyAll_colaCut2_lowERC",
     "sftyAll_colaCut2_highERC",
     
-    "sftyAll_benCut2&colaCut2_lowERC",
-    "sftyAll_benCut2&colsCut2_highERC"
+    "sftyAll_benCut2_colaCut2_lowERC",
+    "sftyAll_benCut2_colsCut2_highERC"
 )
 
 
@@ -152,8 +152,9 @@ df_results <-
   map(ls_simNames, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
   bind_rows() %>% 
   mutate(NC.ER_PR = 100*(NC - EEC)/PR ) %>% 
-  mutate(sim_name = str_replace(sim_name, "&", "_"),
-         sim_name = factor(sim_name, levels = str_replace(ls_simNames, "&", "_")),
+  mutate(
+         #sim_name = str_replace(sim_name, "&", "_"),
+         sim_name = factor(sim_name, levels = ls_simNames )
          )
 
 
@@ -251,7 +252,8 @@ df_sftyAll_det_lowERC %>%
  
 tab_sftyAll_det_lowERC 
 
-
+# ![](C:/Git/Proj_CAPlans/model_CalPERS/analysis/PlanInfo.png)
+# ![](https://app.lucidchart.com/publicSegments/view/be8af79b-9988-4194-9744-da60cb0a45d5/image.png)
 ```
 
 
@@ -266,7 +268,9 @@ tab_sftyAll_det_lowERC
 
 
 # **Appendix**
-![](C:/Git/Proj_CAPlans/model_CalPERS/analysis/PlanInfo.png)
+
+![](https://app.lucidchart.com/publicSegments/view/be8af79b-9988-4194-9744-da60cb0a45d5/image.png)
+
 
 
 
