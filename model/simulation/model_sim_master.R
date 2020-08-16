@@ -81,7 +81,7 @@ i.r[1:10, 1:5]
 # } else {
 #   source("model/simulation/model_sim_simulation.R")
 # }
-source("model/simulation/model_sim_simulation_contingentCOLA(2).R")
+source("model/simulation/model_sim_simulation_contingentCOLA(3).R")
 
 
 {

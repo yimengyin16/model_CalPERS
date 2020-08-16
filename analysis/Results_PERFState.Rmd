@@ -4,9 +4,227 @@ output:
   html_notebook:
     toc: yes
     number_sections: yes
+  pdf_document:
+    toc: yes
 editor_options:
   chunk_output_type: inline
 ---
+
+```{r loading results, include=FALSE}
+
+source(paste0(here::here(), "/libraries.R"))
+
+
+dir_sims <- "model/simulation/outputs_sim/"
+
+df_simNames <- 
+tribble(
+  ~simName, ~label_benPolicy,
+  "miscAll_baseline",                      "Baseliine: Current policy",
+    
+  "miscAll_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "miscAll_benCut1_highERC",               "Reduce benefit factor by 50%",
+  
+  "miscAll_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
+  "miscAll_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+  
+  "miscAll_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "miscAll_benCut1_colaCut1_highERC",      "Combine the two above",
+  
+  "miscAll_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "miscAll_benCut2_highERC",               "Reduce benefit factor by 25%",
+  
+  "miscAll_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "miscAll_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+  
+  "miscAll_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "miscAll_benCut2_colaCut2_highERC",      "Combine the two above",
+  
+  
+  "sftyAll_baseline",                      "Baseliine: Current policy",  
+  
+  "sftyAll_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "sftyAll_benCut1_highERC",               "Reduce benefit factor by 50%",
+  
+  "sftyAll_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",             
+  "sftyAll_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+  
+  "sftyAll_benCut1_colaCut1_lowERC",       "Combine the two above",     
+  "sftyAll_benCut1_colsCut1_highERC",      "Combine the two above",
+  
+  "sftyAll_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "sftyAll_benCut2_highERC",               "Reduce benefit factor by 25%",
+  
+  "sftyAll_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "sftyAll_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+  
+  "sftyAll_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "sftyAll_benCut2_colsCut2_highERC",      "Combine the two above"
+)
+
+
+# df_simNames$simName
+
+  
+df_results <- 
+  map(df_simNames$simName, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
+  bind_rows() %>% 
+  mutate(NC.ER_PR = 100*(NC - EEC)/PR )  %>% 
+  mutate(
+         #sim_name = str_replace(sim_name, "&", "_"),
+         sim_name = factor(sim_name, levels = df_simNames$simName )
+         )
+
+
+vars_report <- c("sim_name","sim", "year", "AL", "UAAL", "FR_MA", "ERC", "ERC_PR", "NC_PR", "NC.ER_PR", "SC_PR")
+vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
+
+```
+
+
+# **Updates**
+
+## What's new 
+
+Updates since the previous memo (June 28, 2020)
+
+- Added public safety.
+- Added 3 new policies that involve lesser reductions in the COLA and in the benefit factor for future service
+- Minor modeling improvements that cause numbers to change slightly from before 
+
+
+## Future updates
+We're working on the following changes for the next update.
+
+- Impacts on plan members
+- Stochastic analysis
+
+## Key conclusions {.tabset} 
+
+```{r summary, include=FALSE}
+# library(officer)
+
+df_summary_det <- 
+  df_results %>% 
+  filter(sim == 0,
+         year <= 2030) %>% 
+  select(any_of(c("year", "sim_name", "UAAL", "ERC"))) %>% 
+  filter(year %in% c(2018, 2028)) %>% 
+  mutate(UAAL = UAAL/1e9,
+         ERC = ERC/1e9) %>% 
+  gather(Var, value, -sim_name, -year) %>% 
+  mutate(Var = paste0( "y", year, "_", Var ),
+         year = NULL
+         ) %>% 
+  spread(Var, value) 
+# df_summary_det
+
+make_summaryTable <- function(df, grpName, grpName_label){
+  
+ # df <- df_summary_det
+ # grpName <- "sftyAll"
+ # grpName_label <-  "Group: State Safety, POFF, and CHP"
+  
+bind_rows(
+  (df %>% 
+    filter(str_detect(sim_name, grpName )) %>% 
+    mutate(ERCpolicy = "")
+   )[1,],
+
+  (df %>% 
+    filter(str_detect(sim_name, grpName)) %>% 
+    mutate(across(!c(sim_name), ~ 100*(.x/.x[1] - 1))) %>% 
+    mutate(ERCpolicy = str_extract(sim_name, "lowERC|highERC"))
+    )[-1,]
+  ) %>%
+  as_tibble() %>% 
+  mutate(ERCpolicy = factor(ERCpolicy, 
+                            levels = c("", "lowERC", "highERC"),
+                            labels = c("", "Low ERC", "High ERC")
+                            
+                            )) %>% 
+  arrange(ERCpolicy) %>% 
+  relocate(ERCpolicy) %>% 
+  mutate(sim_name = factor(sim_name, 
+                           levels = df_simNames$simName, 
+                           labels = df_simNames$label_benPolicy)
+         ) %>% 
+  flextable() %>% 
+  
+  # Global settings
+   hrule(rule = "exact", part = "all") %>%
+  
+  # Header
+   add_header_row(values = c("", 
+                            "2018",
+                            "2028"),
+                 colwidths = c(2,2,2)) %>%
+  
+   theme_booktabs() %>% 
+   add_header_lines(values = "(Amounts in $ billions)" ) %>%
+   add_header_lines(values = "Assumes investment returns of 7% every year (based on CalPERS assumptions)" ) %>%
+   add_header_lines(values = grpName_label) %>%  
+   add_header_lines(values = "Estimated impacts of selected policy alternatives" ) %>%
+   
+   align(align = "center", part = "header")  %>%
+   height(part = "header",   height = .5, i = 1) %>% 
+   height(part = "header",   height = .5, i = 5:6) %>% 
+   fontsize(size = 12, part = "header") %>%
+   fontsize(size = 18, part = "header", i = 1) %>% 
+   fontsize(size = 16, part = "header", i = 2) %>% 
+   
+   set_header_labels(values =
+                      list(
+                      ERCpolicy  = "",
+										  sim_name   = "policy scenario",
+										  y2018_ERC  = "Employer\ncontribution",
+										  y2028_ERC  = "Employer\ncontribution", 
+										  y2018_UAAL = "UAAL",
+										  y2028_UAAL = "UAAL"
+										  )
+										) %>% 
+  
+   # Body
+   fontsize(size = 12, part = "body") %>% 
+   width(j = 1,   width = 0.6)   %>%
+   width(j = 2,   width = 3)   %>%
+   width(j = 3:6, width = 1.2) %>%
+   height(part = "body",   height = .5) %>%
+  
+   colformat_num(i = c(1), j = 3:6,    digits = 1, prefix = "$") %>% 
+   colformat_num(i = c(2:13), j = 3:6, digits = 1, suffix = "%") %>% 
+   
+   hline(part = "body", i = c(1, 7), border = officer::fp_border(color="gray40", width = 1.5)) %>% 
+   hline(part = "body", i = c(4, 10), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
+   # vline(part = "body", j = c(4), border = officer::fp_border(color="gray40", style = "dotted"))
+   merge_v( j = "ERCpolicy") %>% 
+   
+  # Footer
+  add_footer_lines(values = "Notes:") %>% 
+  add_footer_lines(values = "Low ERC: Employer contributions are reduced to reflect lower actuarially determined contributions (ADC)") %>% 
+  add_footer_lines(values = "High ERC: Employer contributions are approximately maintained despite drop in ADC") %>% 
+  height(part = "footer",   height = .5) %>% 
+  fontsize(size = 12, part = "footer") 
+}  
+      
+#make_summaryTable(df_summary_det, "miscAll", "Group: State Misc and Industrial")
+#make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP")
+
+```
+
+
+### State Misc, 7% return 
+
+```{r, echo=FALSE}
+make_summaryTable(df_summary_det, "miscAll", "Group: State Misc and Industrial")
+```
+
+### State safety, 7% return 
+
+```{r, echo = FALSE}
+make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP")
+```
+
 
 
 
@@ -98,75 +316,10 @@ stochastic return scenario in a later iteration.
 ## Deterministic results, with 7% annual returns
 
 
-```{r loading results, include=FALSE}
-
-source("libraries.R")
-
-
-dir_sims <- "model/simulation/outputs_sim/"
-
-ls_simNames <- 
-  c("miscAll_baseline",
-    
-    "miscAll_benCut1_lowERC",
-    "miscAll_benCut1_highERC",
-    
-    "miscAll_colaCut1_lowERC",
-    "miscAll_colaCut1_highERC",
-    
-    "miscAll_benCut1_colaCut1_lowERC",
-    "miscAll_benCut1_colaCut1_highERC",
-    
-    "miscAll_benCut2_lowERC",
-    "miscAll_benCut2_highERC",
-    
-    "miscAll_colaCut2_lowERC",
-    "miscAll_colaCut2_highERC",
-    
-    "miscAll_benCut2_colaCut2_lowERC",
-    "miscAll_benCut2_colaCut2_highERC",
-    
-    "sftyAll_baseline",
-    
-    "sftyAll_benCut1_lowERC",
-    "sftyAll_benCut1_highERC",
-    
-    "sftyAll_colaCut1_lowERC",
-    "sftyAll_colaCut1_highERC",
-    
-    "sftyAll_benCut1_colaCut1_lowERC",
-    "sftyAll_benCut1_colsCut1_highERC",
-    
-    "sftyAll_benCut2_lowERC",
-    "sftyAll_benCut2_highERC",
-    
-    "sftyAll_colaCut2_lowERC",
-    "sftyAll_colaCut2_highERC",
-    
-    "sftyAll_benCut2_colaCut2_lowERC",
-    "sftyAll_benCut2_colsCut2_highERC"
-)
-
-
-df_results <- 
-  map(ls_simNames, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
-  bind_rows() %>% 
-  mutate(NC.ER_PR = 100*(NC - EEC)/PR ) %>% 
-  mutate(
-         #sim_name = str_replace(sim_name, "&", "_"),
-         sim_name = factor(sim_name, levels = ls_simNames )
-         )
-
-
-vars_report <- c("sim_name","sim", "year", "AL", "UAAL", "FR_MA", "ERC", "ERC_PR", "NC_PR", "NC.ER_PR", "SC_PR")
-vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
-
-```
-
 
 ### Assumption A: Employer contributions are reduced to reflect lower actuarially determined contributions
 ```{r sftyAll_det_lowERC, echo=FALSE}
-library(officer)
+#library(officer)
 
 df_sftyAll_det_lowERC <- 
   df_results %>% 
@@ -245,9 +398,9 @@ df_sftyAll_det_lowERC %>%
 										  sftyAll_benCut2_colaCut2_lowERC = "Both policies(left) \ncombined"
 										  )
   ) %>% 
-  hline(part = "body", i = 4, border = fp_border(color="gray40") ) %>% 
+  hline(part = "body", i = 4, border = officer::fp_border(color="gray40") ) %>% 
   #hline_bottom(part = "body", border = fp_border(color="gray40") ) %>% 
-  vline(part = "all", j = c(3,6),  border = fp_border(color="gray80") )
+  vline(part = "all", j = c(3,6),  border = officer::fp_border(color="gray80") )
   
  
 tab_sftyAll_det_lowERC 
@@ -260,7 +413,7 @@ tab_sftyAll_det_lowERC
 ### Assumption B: Employer contributions are approximately maintained despite drop in ADC
 
 
-## Asset shock scenario (24% decline in portfolio)
+## Asset shock scenario (24% decline in portfolio) {.tabset}
 
 ### Assumption A: Employer contributions are reduced to reflect lower actuarially determined contributions
 
@@ -269,7 +422,7 @@ tab_sftyAll_det_lowERC
 
 # **Appendix**
 
-![](https://app.lucidchart.com/publicSegments/view/be8af79b-9988-4194-9744-da60cb0a45d5/image.png)
+![](C:/Git/Proj_CAPlans/model_CalPERS/analysis/PlanInfo.png)
 
 
 
