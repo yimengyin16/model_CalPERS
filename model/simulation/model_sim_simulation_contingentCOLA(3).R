@@ -582,10 +582,10 @@ run_sim <- function(i.r_ = i.r,
     penSim$FR_MA[j] <- with(penSim, MA[j] / AL[j])
     penSim$FR_AA[j] <- with(penSim, AA[j] / AL[j])
     
-    if(!is.na(use_lowerDR)){
-      penSim$FR_MA_lowerDR[j] <- with(penSim, MA[j] / AL[j] * cola_lowerDR_fixedALratio )
-      
-    }
+    # if(!is.na(use_lowerDR)){
+    #   penSim$FR_MA_lowerDR[j] <- with(penSim, MA[j] / AL[j] * cola_lowerDR_fixedALratio )
+    #   
+    # }
       
     # UAAL(j)
     penSim$UAAL[j]    <- with(penSim, AL[j] - AA[j])
@@ -600,7 +600,7 @@ run_sim <- function(i.r_ = i.r,
         
         if(!is.na(use_lowerDR)){
           
-          penSim$FR_MA_lowerDR[j] <- with(penSim, MA[j] / AL[j] * cola_lowerDR_fixedALratio )
+          penSim$FR_MA_lowerDR[j] <- with(penSim, MA[j] / (AL[j] * cola_lowerDR_fixedALratio))
           if(penSim$FR_MA_lowerDR[j] >= 0.995) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR # use 99.99 to avoid rounding issue
           
         } else {
