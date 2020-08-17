@@ -95,16 +95,20 @@ vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
 
 Updates since the previous memo (June 28, 2020)
 
-- Added public safety.
+- Added results for a new group consisting of state safety, peace officiers and firefighers(POFF), and California Highway Patrol(CHP) members.
 - Added 3 new policies that involve lesser reductions in the COLA and in the benefit factor for future service
+- Added a contingent COLA policy in which COLA is determined based on funded ratio calculated using 5% discount rate.
 - Minor modeling improvements that cause numbers to change slightly from before 
 
 
 ## Future updates
 We're working on the following changes for the next update.
 
+- Modeling classic members and PEPRA members separately
 - Impacts on plan members
 - Stochastic analysis
+- Various minor policy features of PERF A (e.g. amortization with ramp-up period)
+
 
 ## Key conclusions {.tabset} 
 
@@ -265,7 +269,7 @@ focused on much narrower scaling back of future benefits (e.g., disallowing “a
 
     - COLA is fully suspended until the plan is fully funded under the plan chosen actuarial discount rate (7%).
     - COLA is reduced from 2% to 1% per year until the plan is fully funded under the plan chosen actuarial discount rate (7%).
-    - (TODO) COLA is reduced from 2% to 1% per year until the plan is fully funded under a more conservative discount rate (5%). (Similar to the Rhode Island plan) 
+    - COLA is reduced from 2% to 1% per year until the plan is fully funded under a more conservative discount rate (5%). (Similar to the Rhode Island plan) 
     
 
 3. Both policies combined: The benefit factor is reduced and the COLA is
