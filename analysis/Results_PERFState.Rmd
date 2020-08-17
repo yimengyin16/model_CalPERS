@@ -493,7 +493,7 @@ make_summaryTable_detailed("sftyAll", -2)
 ```
 
 
-```{r, eval = FALSE}
+```{r, eval = FALSE, include=FALSE}
 
 file.copy(paste0(here::here(),"/analysis/Results_PERFState.nb.html"), paste0(here::here(), "/docs/Results_PERFState.nb.html"), overwrite = TRUE)
 
