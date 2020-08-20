@@ -327,7 +327,6 @@ policies, particularly the contingent COLA policy, interact with investment retu
 The tables below provide summary results for the deterministic scenarios. We will add tables for the
 stochastic return scenario in a later iteration.
 
-$~$
 
 # **Preliminary results**
 
