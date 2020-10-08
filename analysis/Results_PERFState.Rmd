@@ -1,11 +1,11 @@
 ---
 title: "CalPERS State plan & policy options: \npreliminary results for discussion"
 output:
+  word_document:
+    toc: yes
   html_notebook:
     toc: yes
     number_sections: yes
-  pdf_document:
-    toc: yes
 editor_options:
   chunk_output_type: inline
 ---
