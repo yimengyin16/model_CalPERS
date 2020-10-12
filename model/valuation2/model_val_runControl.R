@@ -19,7 +19,7 @@ dir_planInfo <- "inputs/data_proc/"
 filePath_planInfo <- paste0(dir_planInfo, "Data_CalPERS_planInfo_AV2018.RData")
 
 # Output folder  
-dir_outputs_val <- "model/valuation/outputs_val/"
+dir_outputs_val <- "model/valuation2/outputs_val/"
 
 
 ## Import global parameters
@@ -45,23 +45,14 @@ val_runList <- read_excel(filePath_runControl, sheet="params_val", skip  = 3) %>
 #*******************************************************************************
 #                    ### Run valuations   ####                      
 #*******************************************************************************
+#source("model/valuation2/model_val_create_Dev_2tiers(2).R")
+source("model/valuation2/model_val_master_multiTier(1).R")
 
-source("model/valuation/model_val_create_Dev_2tiers(2).R")
+# val_name_run <- val_runList$val_name[1]
 
 for (val_name_run in val_runList$val_name){
-  #val_name_run <- val_runList$val_name[1]
   create_val_2tiers(val_name_run)
 }
-
-
-
-ls_miscAll <- readRDS("model/valuation/outputs_val/val_miscAll_bf100_cola2.rds")
-ls_sftyAll <- readRDS("model/valuation/outputs_val/val_sftyAll_bf100_cola2.rds")
-
-
-
-ls_miscAll$aggLiab
-ls_sftyAll$aggLiab
 
 
 
