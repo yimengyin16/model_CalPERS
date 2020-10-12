@@ -263,21 +263,21 @@ saveRDS(
 }
 
 
-
-ls_miscAll <- readRDS("model/valuation/outputs_val/val_miscAll_bf100_cola2.rds")
-ls_sftyAll <- readRDS("model/valuation/outputs_val/val_sftyAll_bf100_cola2.rds")
-
-
-ls_mix <- readRDS("model/valuation2/outputs_val/val_mix_bf100_cola2.rds")
-
-
-
-x <- names(ls_miscAll$aggLiab$miscAll)[2]
-ls_miscAll$aggLiab$miscAll[[x]] - ls_mix$aggLiab$miscAll[[x]]
-
-
-x <- names(ls_sftyAll$aggLiab$sftyAll)[5]
-100 * (ls_sftyAll$aggLiab$sftyAll[[x]] - ls_mix$aggLiab$sftyAll[[x]])/ls_sftyAll$aggLiab$sftyAll[[x]]
-
+# 
+# ls_miscAll <- readRDS("model/valuation/outputs_val/val_miscAll_bf100_cola2.rds")
+# ls_sftyAll <- readRDS("model/valuation/outputs_val/val_sftyAll_bf100_cola2.rds")
+# 
+# 
+# ls_mix <- readRDS("model/valuation2/outputs_val/val_mix_bf100_cola2.rds")
+# 
+# 
+# 
+# x <- names(ls_miscAll$aggLiab$miscAll)[2]
+# ls_miscAll$aggLiab$miscAll[[x]] - ls_mix$aggLiab$miscAll[[x]]
+# 
+# 
+# x <- names(ls_sftyAll$aggLiab$sftyAll)[5]
+# 100 * (ls_sftyAll$aggLiab$sftyAll[[x]] - ls_mix$aggLiab$sftyAll[[x]])/ls_sftyAll$aggLiab$sftyAll[[x]]
+# 
 
 
