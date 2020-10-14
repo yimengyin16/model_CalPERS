@@ -92,9 +92,13 @@
 #    - ind	0.063
 #     - inds-classic	0.046
 #     - inds-pepra	  0.017
+#' 
+#' For now, the weights of active members above are applied all types of decrements, 
+#' including rates for retirees. 
+
 
 # Notes on gender ratio:
-# 40% male and 60% female for all calculations
+# 40% male and 60% female for all calculations for misc members. 
 
 
 
