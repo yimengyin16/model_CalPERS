@@ -17,8 +17,8 @@ run_sim <- function(i.r_ = i.r,
   
   valData <- readRDS(paste0(dir_val, "val_", sim_paramlist_$val_name, ".rds"))
   # note that "dir_val" is defined outside the function
-  tn <- names(valData$aggLiab)[1] # this will be replaced by the tag for aggregate results, like "agg" 
- 
+  #tn <- names(valData$aggLiab)[1] # this will be replaced by the tag for aggregate results, like "agg" 
+  tn <- "sumTiers"
   
   #*****************************************************************************
   #              Special settings for modeling CalPERS PERF A      ####
@@ -233,7 +233,7 @@ run_sim <- function(i.r_ = i.r,
     			    			 )
   # penSim0 <- as.list(penSim0)
   
-  valData$aggLiab[[tn]]$active
+  #valData$aggLiab[[tn]]$active
 
   #*****************************************************************************
   #                      Defining variables in simulation  ####

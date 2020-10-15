@@ -230,11 +230,11 @@ load(filePath_planInfo) # %>% print
 
 init_amort_include <- character()
 
-if(any(str_detect(val_paramlist$tier_include, "miscAll"))){
+if(any(str_detect(val_paramlist$tier_include, "misc"))){
   init_amort_include <- c(init_amort_include, c("misc", "inds"))
   }
 
-if(any(str_detect(val_paramlist$tier_include, "sftyAll"))){
+if(any(str_detect(val_paramlist$tier_include, "sfty"))){
   init_amort_include <- c(init_amort_include, c("sfty", "poff", "chp"))
 }
 
@@ -263,7 +263,8 @@ saveRDS(
 }
 
 
-# 
+# aggLiab
+
 # ls_miscAll <- readRDS("model/valuation/outputs_val/val_miscAll_bf100_cola2.rds")
 # ls_sftyAll <- readRDS("model/valuation/outputs_val/val_sftyAll_bf100_cola2.rds")
 # 

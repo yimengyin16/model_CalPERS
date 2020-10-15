@@ -132,7 +132,8 @@ var_display1 <- c("sim_name", "val_name", "sim", "year",
                   "ERC_PR",
                   "EEC_PR",
                   # "ADC", 
-                  "NC", "ERC", "EEC", "SC", "LG", "i.r", "PR"
+                  "NC", "ERC", "EEC", "SC", "LG", "i.r", "PR",
+                  "nactives"
 )
 
 

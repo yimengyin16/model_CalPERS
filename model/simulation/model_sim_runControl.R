@@ -46,7 +46,7 @@ returnScenarios <- read_excel(filePath_runControl, sheet="returns", skip = 0) %>
 
 for(sim_name_run in sim_runList$sim_name){
   
-  #sim_name_run <- "sftyAll_baseline"
+  #sim_name_run <- "misc_bf100_cola2"
   sim_paramlist <- filter(sim_runList, sim_name == sim_name_run) %>% as.list
  
   source("model/simulation/model_sim_master.R")

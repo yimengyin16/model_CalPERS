@@ -41,7 +41,7 @@ get_demographics <- function(ls_tierData_,
 # Global_paramlist_ <- Global_paramlist
 # val_paramlist_    <- val_paramlist
 
-newEnt_byTier <- c(1, 0) # for now only allow for new entrants in the first tier. 
+newEnt_byTier <- c(0, 1) # for now only allow for new entrants in the first tier. 
 names(newEnt_byTier) <- names(ls_tierData_)  
   
   

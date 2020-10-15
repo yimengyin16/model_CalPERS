@@ -209,7 +209,7 @@ add_entrantsDist <- function(tierData,
   # Check negative numbers
   neg_ea <- entrants[which(entrants$avg_ent < 0), "ea"]
   
-  if(any(entrants$avg_ent < 0)){warning("Negative inferred value(s) in the following entry age(s): " , as.character(neg_ea), "\n", "Values will be coerced to 0." )
+  if(any(entrants$avg_ent < 0)){warning("\n",  tierData$tier_params$tier_name, ":", "\n", "Negative inferred value(s) in the following entry age(s): " , as.character(neg_ea), "\n", "Values will be coerced to 0." )
     #"  Simple imputation rule is applied")
     #ent <- nact1                          
   }
