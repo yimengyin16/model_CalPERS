@@ -52,10 +52,10 @@ cat("Running simulation", sim_paramlist$sim_name, "\n")
 #                         Load data                                         ####
 #*******************************************************************************
 
-sim_paramlist$run_val <- FALSE
-if(sim_paramlist$run_val){
-  source(paste0("model/valuation/model_val_create_", sim_paramlist$val_name, ".R"))
-}
+# sim_paramlist$run_val <- FALSE
+# if(sim_paramlist$run_val){
+#   source(paste0("model/valuation/model_val_create_", sim_paramlist$val_name, ".R"))
+# }
 
 # Load tier data
 dir_val <- "model/valuation2/outputs_val/"
@@ -81,7 +81,7 @@ i.r[1:10, 1:5]
 # } else {
 #   source("model/simulation/model_sim_simulation.R")
 # }
-source("model/simulation/model_sim_simulation_contingentCOLA(3).R")
+source("model/simulation/model_sim_simulation_contingentCOLA(4).R")
 
 
 {
@@ -162,6 +162,7 @@ print(end_time  - start_time)
 #          defr_pct_servRet = AL.defrRet / AL.servRet)
 
 
-
+sim_misc_bf100_cola2$results   %>% filter(sim == 0, year <= 2027)  %>% select(one_of(var_display1))  %>% print
+sim_misc_bf100_colaCut$results %>% filter(sim == 0, year <= 2027)  %>% select(one_of(var_display1))  %>% print
 
 
