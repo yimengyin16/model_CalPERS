@@ -244,14 +244,22 @@ liab_active %<>%
 		
 		# Benefit reduction factors
 		benReduction = case_when(
-			grp %in% c("miscAll") & age %in% 50:55 ~ 1 - (55 - age) * 0.09,
-			grp %in% c("miscAll") & age %in% 59:63 ~ 1 + (age - 55) * 0.03125,
-			grp %in% c("miscAll") & age > 63 ~ 1.25,
+			grp %in% c("miscAll", "misc_classic") & age %in% 50:55 ~ 1 - (55 - age) * 0.09,
+			grp %in% c("miscAll", "misc_classic") & age %in% 56:63 ~ 1 + (age - 55) * 0.03125,
+			grp %in% c("miscAll", "misc_classic") & age > 63 ~ 1.25,
+			
+			grp %in% c("misc_pepra") & age %in% 52:62 ~ 1 - (62 - age) * 0.05,
+			grp %in% c("misc_pepra") & age %in% 63:67 ~ 1 + (age - 62) * 0.05,
+			grp %in% c("misc_pepra") & age > 67 ~ 1.25,
 			
 			# TEMP: assuming constant benefit factor for safety members (similar to the 3%@50 rule for POFF )
-			grp %in% c("sftyAll") ~ 1,
+			grp %in% c("sftyAll", "sfty_classic") ~ 1,
+			
+			grp %in% c("sfty_pepra") & age %in% 50:57 ~ 1 - (57 - age) * (0.2/7),
+			# grp %in% c("sfty_pepra") & age > 57 ~ 1.25,
 			
 			TRUE ~ 1),
+		
 		
 		# Retirement eligibility and % benefit can be claimed at retirement 
 		gx.servRet.laca = case_when(
@@ -928,7 +936,10 @@ var.names <- c(ALx.servRet.laca.method, NCx.servRet.laca.method, PVFNCx.servRet.
 						   "PVFBx.disbRet",
 						   
 							 "PVFSx",
-						   "PVFEEC"
+						   "PVFEEC",
+							 
+							 "Bx",
+							 "Bx.servRet.laca"
 						   )
 
 

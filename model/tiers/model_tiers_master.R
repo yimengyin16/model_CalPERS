@@ -20,3 +20,6 @@ source("model/tiers/Tier_sftyAll.R")
 #*******************************************************************************
 source("model/tiers/Tier_misc_classic.R")
 source("model/tiers/Tier_misc_pepra.R")
+
+source("model/tiers/Tier_sfty_classic.R")
+source("model/tiers/Tier_sfty_pepra.R")

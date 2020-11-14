@@ -278,17 +278,40 @@ amort_sl <- function(p, i, m, end = FALSE){
 # amort_cd(100, 0.07, 15, F, skipY1) # %>% sum  # 160.08 4% higher
 
 
+amort_ramp5y <- function(p, i, n, end = FALSE){
+  # amortization function with 5-year ramp-up period and then constant payments
+  # p = principle, i = interest rate, n = periods.
+  # end: , if TRUE, payment at the end of period.
+  if(end) p <- p*(1 + i)
+  v <- 1/(1 + i)
+  
+  a_n <- 0.2 + 0.4*v + 0.6*v^2 + 0.8*v^3 + 
+    v^4 * (1 - v^(n-4))/(1-v)
+  
+  pmt_full   <- p / a_n
+  
+  pmt_series <- pmt_full * c(0.2, 0.4, 0.6, 0.8, rep(1, n - 4)) 
+  
+  return(pmt_series)
+}
+
+
+
 # Function for choosing amortization methods
 amort_LG <- function(p, i, m, g, end = FALSE, method = "cd", skipY1 = FALSE){
   # amortize the gain/loss using specified amortization method
   switch(method,
          cd = amort_cd(p, i ,m, end, skipY1),
          cp = amort_cp(p, i, m, g, end, skipY1),
-         sl = amort_sl(p, i, m, end)
+         sl = amort_sl(p, i, m, end),
+         ramp = amort_ramp5y(p, i, m, end)
          )
   }
 
-# amort_LG(100, 0.07, 15, 0.03, F, "cp", T)
+#amort_LG(100, 0.07, 15, 0.03, F, "cp",   T)
+#amort_LG(100, 0.07, 20, 0.03, F, "ramp", T)
+
+
 
 
 #********************************
@@ -902,19 +925,34 @@ get_cumAsset <- function(cf, i, year_end = FALSE){
 
 
 
+amort_5yramp <- function(p, i, n, end = FALSE){
+  # amortization function with constant payment at each period
+  # p = principle, i = interest rate, n = periods.
+  # end: , if TRUE, payment at the end of period.
+  if(end) p <- p*(1 + i)
+  v <- 1/(1 + i)
+  
+  a_n <- 0.2 + 0.4*v + 0.6*v^2 + 0.8*v^3 + 
+         v^4 * (1 - v^(n-4))/(1-v)
+    
+  pmt_full   <- p / a_n
+  
+  pmt_series <- pmt_full * c(0.2, 0.4, 0.6, 0.8, rep(1, n - 4)) 
+  
+  return(pmt_series)
+}
 
 
+x <- amort_5yramp(100, 0.07, 20)
 
+y <- numeric(21)
+y[1] <- 100
 
+for(j in 2:21){
+  y[j] = (y[j-1] - x[j-1]) * (1 + 0.07)
+}
 
-
-
-
-
-
-
-
-
+y %>% round(1)
 
 
 

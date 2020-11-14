@@ -1,11 +1,11 @@
 ---
 title: "CalPERS State plan & policy options: \npreliminary results for discussion"
 output:
-  word_document:
-    toc: yes
   html_notebook:
     toc: yes
     number_sections: yes
+  word_document:
+    toc: yes
 editor_options:
   chunk_output_type: inline
 ---
@@ -15,64 +15,61 @@ editor_options:
 source(paste0(here::here(), "/libraries.R"))
 
 
-dir_sims <- "model/simulation/outputs_sim/"
+dir_sims <- "model/simulation/outputs_sim2t/"
 
 df_simNames <- 
 tribble(
   ~simName, ~label_benPolicy,
-  "miscAll_baseline",                      "Baseline: Current policy",
+  "misc2t_baseline",                      "Baseline: Current policy",
     
-  "miscAll_benCut1_lowERC",                "Reduce benefit factor by 50%",
-  "miscAll_benCut1_highERC",               "Reduce benefit factor by 50%",
+  "misc2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "misc2t_benCut1_highERC",               "Reduce benefit factor by 50%",
   
-  "miscAll_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
-  "miscAll_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+  "misc2t_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
+  "misc2t_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
   
-  "miscAll_benCut1_colaCut1_lowERC",       "Combine the two above",
-  "miscAll_benCut1_colaCut1_highERC",      "Combine the two above",
+  "misc2t_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "misc2t_benCut1_colaCut1_highERC",      "Combine the two above",
   
-  "miscAll_benCut2_lowERC",                "Reduce benefit factor by 25%",
-  "miscAll_benCut2_highERC",               "Reduce benefit factor by 25%",
+  "misc2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "misc2t_benCut2_highERC",               "Reduce benefit factor by 25%",
   
-  "miscAll_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
-  "miscAll_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+  "misc2t_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "misc2t_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
   
-  "miscAll_benCut2_colaCut2_lowERC",       "Combine the two above",
-  "miscAll_benCut2_colaCut2_highERC",      "Combine the two above",
+  "misc2t_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "misc2t_benCut2_colaCut2_highERC",      "Combine the two above",
   
-  "miscAll_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
-  "miscAll_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
+  "misc2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
+  "misc2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
   
   
-  "sftyAll_baseline",                      "Baseliine: Current policy",  
-  
-  "sftyAll_benCut1_lowERC",                "Reduce benefit factor by 50%",
-  "sftyAll_benCut1_highERC",               "Reduce benefit factor by 50%",
-  
-  "sftyAll_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",             
-  "sftyAll_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
-  
-  "sftyAll_benCut1_colaCut1_lowERC",       "Combine the two above",     
-  "sftyAll_benCut1_colsCut1_highERC",      "Combine the two above",
-  
-  "sftyAll_benCut2_lowERC",                "Reduce benefit factor by 25%",
-  "sftyAll_benCut2_highERC",               "Reduce benefit factor by 25%",
-  
-  "sftyAll_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
-  "sftyAll_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
-  
-  "sftyAll_benCut2_colaCut2_lowERC",       "Combine the two above",
-  "sftyAll_benCut2_colsCut2_highERC",      "Combine the two above",
-  
-  "sftyAll_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
-  "sftyAll_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)"
-  
+  "sfty2t_baseline",                      "Baseliine: Current policy",
+
+  "sfty2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "sfty2t_benCut1_highERC",               "Reduce benefit factor by 50%",
+
+  "sfty2t_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
+  "sfty2t_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+
+  "sfty2t_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "sfty2t_benCut1_colaCut1_highERC",      "Combine the two above",
+
+  "sfty2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "sfty2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+
+  "sfty2t_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "sfty2t_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+
+  "sfty2t_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "sfty2t_benCut2_colaCut2_highERC",      "Combine the two above",
+
+  "sfty2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
+  "sfty2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)"
 )
 
 
 # df_simNames$simName
-
-  
 df_results <- 
   map(df_simNames$simName, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
   bind_rows() %>% 
@@ -94,11 +91,16 @@ $~$
 
 # **Updates**
 
-
-
 ## What's new 
 
-Updates since the previous memo (June 28, 2020)
+Updates since the previous 
+
+- Classic members and PEPRA members are modeled separately. 
+- Add the 5-year ramp-up period to the amortization method
+- Add analysis of the impact on member benefit (in progress)
+
+
+Updates since the memo of June 28, 2020
 
 - Added results for a new group consisting of state safety, peace officers and firefighters(POFF), and California Highway Patrol(CHP) members.
 - Added 3 new policies that involve lesser reductions in the COLA and in the benefit factor for future service
@@ -232,13 +234,13 @@ bind_rows(
 ### State Misc, 7% return 
 
 ```{r, echo=FALSE}
-make_summaryTable(df_summary_det, "miscAll", "Group: State Misc and Industrial")
+make_summaryTable(df_summary_det, "misc2t", "Group: State Misc and Industrial")
 ```
 
 ### State safety, 7% return 
 
 ```{r, echo = FALSE}
-make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP")
+make_summaryTable(df_summary_det, "sfty2t", "Group: State Safety, POFF, and CHP")
 ```
 
 
@@ -338,11 +340,13 @@ stochastic return scenario in a later iteration.
 
 make_summaryTable_detailed <- function(grpName, sim_select){
 
- # sim_select <- -2
- # grpName <- "miscAll" 
+# sim_select <- 0
+# grpName <- "misc2t"
 grpName_label <- switch (grpName,
                          miscAll = "Group: State misc and industrial",
-                         sftyAll = "Group: State safety, POFF, and CHP")
+                         sftyAll = "Group: State safety, POFF, and CHP",
+                         misc2t = "Group: State misc and industrial",
+                         sfty2t = "Group: State safety, POFF, and CHP")
 
 return_label <- switch (as.character(sim_select),
   "0"  = "Assumes investment returns of 7% every year (based on CalPERS assumptions)",
@@ -372,7 +376,7 @@ return_label <- switch (as.character(sim_select),
   
 
 
-   
+    
 bind_rows(
   (df %>% 
     filter(str_detect(sim_name, grpName)) %>% 
@@ -480,12 +484,12 @@ bind_rows(
 
 ### State misc
 ```{r echo=FALSE}
-make_summaryTable_detailed("miscAll", 0)
+make_summaryTable_detailed("misc2t", 0)
 ```
 
 ### State safety 
 ```{r echo=FALSE}
-make_summaryTable_detailed("sftyAll", 0)
+make_summaryTable_detailed("sfty2t", 0)
 ```
 
 
@@ -495,23 +499,66 @@ make_summaryTable_detailed("sftyAll", 0)
 
 ### State misc
 ```{r echo=FALSE}
-make_summaryTable_detailed("miscAll", -2)
+make_summaryTable_detailed("misc2t", -2)
 ```
 
 ### State safety 
 ```{r echo=FALSE}
-make_summaryTable_detailed("sftyAll", -2)
+make_summaryTable_detailed("sfty2t", -2)
 ```
 
 
 ```{r, eval = FALSE, include=FALSE}
 
-file.copy(paste0(here::here(),"/analysis/Results_PERFState.nb.html"), paste0(here::here(), "/docs/Results_PERFState.nb.html"), overwrite = TRUE)
+file.copy(paste0(here::here(),"/analysis/Results_PERFState_v2.nb.html"), paste0(here::here(), "/docs/Results_PERFState_v2.nb.html"), overwrite = TRUE)
 
 ```
 
 
 $~$
+
+## Impact on member benefit
+
+Cohorts to examine
+
+- retirees who retire in year 1
+- classic member age 50 + entry age 25, assuming retirement age of 55 
+- classic member age 40 + engry age 25, assuming retirement age of 55
+
+What to compare
+
+- Plotting annual benefit: age 55 to 85
+- PV benefit over age 55 to 85, dr = 0.7, valuated at age 55
+
+scenario:
+
+- assumption met
+- asset shock 
+
+
+
+
+```{r echo=FALSE}
+
+
+dir_outputs_val <- "model/valuation2/outputs_val/"
+
+
+df_val <- readRDS(paste0(dir_outputs_val, "val_misc2t_bf100_cola2.rds"))
+
+
+df_val$indivLiab$misc_classic$active %>% 
+  names
+
+
+
+```
+
+
+
+
+$~$
+
 
 # **Appendix**
 

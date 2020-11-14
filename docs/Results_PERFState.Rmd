@@ -1,11 +1,11 @@
 ---
 title: "CalPERS State plan & policy options: \npreliminary results for discussion"
 output:
-  word_document:
-    toc: yes
   html_notebook:
     toc: yes
     number_sections: yes
+  pdf_document:
+    toc: yes
 editor_options:
   chunk_output_type: inline
 ---
@@ -20,7 +20,7 @@ dir_sims <- "model/simulation/outputs_sim/"
 df_simNames <- 
 tribble(
   ~simName, ~label_benPolicy,
-  "miscAll_baseline",                      "Baseline: Current policy",
+  "miscAll_baseline",                      "Baseliine: Current policy",
     
   "miscAll_benCut1_lowERC",                "Reduce benefit factor by 50%",
   "miscAll_benCut1_highERC",               "Reduce benefit factor by 50%",
@@ -89,21 +89,16 @@ vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
 ```
 
 
-$~$
-
-
 # **Updates**
-
-
 
 ## What's new 
 
 Updates since the previous memo (June 28, 2020)
 
-- Added results for a new group consisting of state safety, peace officers and firefighters(POFF), and California Highway Patrol(CHP) members.
+- Added results for a new group consisting of state safety, peace officiers and firefighers(POFF), and California Highway Patrol(CHP) members.
 - Added 3 new policies that involve lesser reductions in the COLA and in the benefit factor for future service
 - Added a contingent COLA policy in which COLA is determined based on funded ratio calculated using 5% discount rate.
-- Minor modeling improvements that cause numbers to change slightly from the previous memo 
+- Minor modeling improvements that cause numbers to change slightly from before 
 
 
 ## Future updates
@@ -242,7 +237,6 @@ make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP
 ```
 
 
-$~$
 
 
 # **Overview**
@@ -309,7 +303,7 @@ can interact with the contingent COLA: if full funding is reached sooner, then b
 will go up as the COLA is put back into effect.
 
 
-## Investment return scenarios
+## Investment return scearnios
 In the tables below we show results for 2018 (the actuarial valuation year and our first year) and for
 2028. The model goes out much further in time and it can be useful to pay attention to later time
 periods as well to gain a better understanding of investment risks and amortization policies.
@@ -326,7 +320,6 @@ negative 24% in 2020, then 3 years of 12% (2021-2023), then 7% annually thereaft
 policies, particularly the contingent COLA policy, interact with investment return volatility.
 The tables below provide summary results for the deterministic scenarios. We will add tables for the
 stochastic return scenario in a later iteration.
-
 
 # **Preliminary results**
 
@@ -511,7 +504,7 @@ file.copy(paste0(here::here(),"/analysis/Results_PERFState.nb.html"), paste0(her
 ```
 
 
-$~$
+
 
 # **Appendix**
 

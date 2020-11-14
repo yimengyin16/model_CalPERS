@@ -15,7 +15,8 @@ dir_runControl <- "model/"
 fn_runControl  <- "RunControl.xlsx"
 filePath_runControl <- paste0(dir_runControl, fn_runControl)
 
-dir_outputs <- "model/simulation/outputs_sim/"
+dir_outputs <- "model/simulation/outputs_sim2t/"
+
 
 
 ## Import global parameters
