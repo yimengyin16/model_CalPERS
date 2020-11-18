@@ -1,4 +1,10 @@
-# This script conducts the simulation of the finance of the plan
+## This script conducts the simulation of the finance of the plan
+
+## What's new in version (4)
+#    - contingent COLA with multiple tiers. 
+
+# Temp: initial cola_acual = 0.02
+
 
 
 run_sim <- function(i.r_ = i.r,
@@ -19,6 +25,7 @@ run_sim <- function(i.r_ = i.r,
   # note that "dir_val" is defined outside the function
   #tn <- names(valData$aggLiab)[1] # this will be replaced by the tag for aggregate results, like "agg" 
   tn <- "sumTiers"
+  tier_names <- names(valData$indivLiab)
   
   #*****************************************************************************
   #              Special settings for modeling CalPERS PERF A      ####
@@ -54,10 +61,14 @@ run_sim <- function(i.r_ = i.r,
   #***************************************************************************** 
   # Only apply contingent COLA to service retirees
 
-  df_servRet0 <-
+  ls_servRet0 <- list()
+  
+  for(tierName in tier_names){
+  
+  ls_servRet0[[tierName]] <-
     left_join(
-      valData$pop[[tn]]$wf_servRet.la,
-      valData$indivLiab[[tn]]$servRet.la,
+      valData$pop[[tierName]]$wf_servRet.la,
+      valData$indivLiab[[tierName]]$servRet.la,
       by =  c("ea", "age", "year", "year_servRet")
     ) %>%
     mutate(across(everything(), na2zero)) %>%
@@ -66,7 +77,7 @@ run_sim <- function(i.r_ = i.r,
            ) %>%
     select(start_year, ea, age, age_servRet, year_servRet, year, B.servRet.la, ALx.servRet.la, n_servRet.la, ax.servRet)
 
-  df_servRet0 %<>%
+  ls_servRet0[[tierName]] %<>%
     mutate(B.servRet.la   = ifelse(year_servRet == year , B.servRet.la, 0),
            ALx.servRet.la = ifelse(year == init_year , ALx.servRet.la, 0)) %>%
     filter(age >= age_servRet) %>%
@@ -76,54 +87,12 @@ run_sim <- function(i.r_ = i.r,
     mutate(n_sum = sum(n_servRet.la)) %>% 
     ungroup() %>% 
     filter(n_sum != 0)
-  # 
-  # 
-  # x <- 
-  # df_servRet0 
-  # 
-  # x %>% nrow
-  
-  # df_servRet0 <-
-  #   left_join(
-  #     valData$indivLiab[[tn]]$servRet.la %>% ungroup,
-  #     valData$pop[[tn]]$wf_servRet.la,
-  #     by =  c("ea", "age", "year", "year_servRet")
-  #   ) %>%
-  #   mutate(across(everything(), na2zero)) %>% 
-  #   mutate(start_year  = year - (age - ea),
-  #          age_servRet = age - (year - year_servRet) 
-  #   ) %>% 
-  #   select(start_year, ea, age, age_servRet, year_servRet, year, B.servRet.la, ALx.servRet.la, n_servRet.la, ax.servRet)
-  # 
-  
-  # df_servRet0
-  
-  
-  # 
-  # valData$indivLiab[[tn]]$servRet.la %>% 
-  #   mutate(start_year  = year - (age - ea),
-  #          age_servRet = age - (year - year_servRet) 
-  #   ) %>% 
-  #   filter(start_year == 2000, ea ==34, age_servRet == 53)
-  # 
-  
-  
-  # j <- 2018
-  # cola_actual <- 0.01
-  # 
-  # df_servRet <-
-  #   mutate(df_servRet,
-  #          B.servRet.la   = ifelse(year == j & year > year_servRet, lag(B.servRet.la, 1, 0) * (1 + cola_actual), B.servRet.la),
-  #          ALx.servRet.la = B.servRet.la * ax.servRet)
-  # 
-  # df_servRet %>% filter(start_year == 2000, ea ==34, age_servRet == 53)
-  # 
-  # df_servRet %>% filter(year == 2018) %>% summarise(AL.servRet.la = sum(ALx.servRet.la * n_servRet.la)) %>% pull(AL.servRet.la)
-  # df_servRet %>% filter(year == 2018) %>% summarise(B.servRet.la  = sum(B.servRet.la * n_servRet.la)) %>% pull(B.servRet.la)
-
-  
-
    
+  }
+
+  # ls_servRet0$misc_classic
+    
+       
   #*****************************************************************************
   #                       Defining variables in simulation ####
   #***************************************************************************** 
@@ -223,7 +192,7 @@ run_sim <- function(i.r_ = i.r,
     	     C_PR = 0,
     			 
     	     # Contingent COLA
-    	     cola_actual = 0,
+    	     cola_actual = 0.02,
     	     #AL_lowerDR  = 0,
     	     FR_MA_lowerDR  = 0
     	     
@@ -457,12 +426,12 @@ run_sim <- function(i.r_ = i.r,
   cl <- makeCluster(ncore) 
   registerDoParallel(cl)
   
-  penSim_results <- foreach(k = -2:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
+  penSim_results <- foreach(k = -2:nsim, .packages = c("dplyr", "tidyr", "purrr")) %dopar% {
     # k <- 0
     # initialize
     penSim   <- penSim0
     SC_amort <- SC_amort0
-    df_servRet <- df_servRet0
+    ls_servRet <- ls_servRet0
     
     if(k == -1) SC_amort[,] <- 0
     
@@ -550,21 +519,38 @@ run_sim <- function(i.r_ = i.r,
     if(useContingentCOLA){  
         
       if(j > 1) {
-        df_servRet <-
-          mutate(df_servRet,
-                 B.servRet.la   = ifelse(year == (init_year + j - 1) & year > year_servRet, lag(B.servRet.la, 1, 0) * (1 + penSim$cola_actual[j-1]), B.servRet.la),
+        
+        for(tierName in tier_names){
+        
+        ls_servRet[[tierName]] <- 
+          mutate(ls_servRet[[tierName]],
+                 B.servRet.la   = ifelse(year == (init_year + j - 1) & year > year_servRet, 
+                                         lag(B.servRet.la, 1, 0) * (1 + penSim$cola_actual[j-1]), 
+                                         B.servRet.la),
                  ALx.servRet.la = B.servRet.la * ax.servRet)
+        }
       }
         
-      #df_servRet %>% filter(start_year == 2000, ea ==34, age_servRet == 53)
+      #ls_servRet %>% filter(start_year == 2000, ea ==34, age_servRet == 53)
       
       # Calculate total benefit and AL for service retirees
-      #penSim$AL.servRet[j] <- df_servRet %>% filter(year == init_year + j - 1) %>% summarise(AL.servRet.la = sum(ALx.servRet.la * n_servRet.la)) %>% pull(AL.servRet.la)
-      #penSim$B.servRet[j]  <- df_servRet %>% filter(year == init_year + j - 1) %>% summarise(B.servRet.la  = sum(B.servRet.la * n_servRet.la)) %>% pull(B.servRet.la)
       
-      penSim$AL.servRet[j] <- (filter(df_servRet, year == init_year + j - 1) %>% summarise(AL.servRet.la = sum(ALx.servRet.la * n_servRet.la)))$AL.servRet.la
-      penSim$B.servRet[j]  <- (filter(df_servRet, year == init_year + j - 1) %>% summarise(B.servRet.la  = sum(B.servRet.la * n_servRet.la)))$B.servRet.la
+      penSim$AL.servRet[j] <- 
+        ls_servRet %>% 
+        map(~ (filter(.x, year == init_year + j - 1) %>% summarise(AL.servRet.la = sum(ALx.servRet.la * n_servRet.la)))$AL.servRet.la) %>% 
+        unlist %>% 
+        sum()
       
+      penSim$B.servRet[j] <- 
+      ls_servRet %>% 
+        map(~ (filter(.x, year == init_year + j - 1) %>% summarise(B.servRet.la  = sum(B.servRet.la * n_servRet.la)))$B.servRet.la) %>% 
+        unlist %>% 
+        sum()
+      
+      
+      # penSim$AL.servRet[j] <- (filter(ls_servRet, year == init_year + j - 1) %>% summarise(AL.servRet.la = sum(ALx.servRet.la * n_servRet.la)))$AL.servRet.la
+      # penSim$B.servRet[j]  <- (filter(ls_servRet, year == init_year + j - 1) %>% summarise(B.servRet.la  = sum(B.servRet.la * n_servRet.la)))$B.servRet.la
+     
         
       # Total liability and benefit: actives and retirees
       
@@ -572,6 +558,7 @@ run_sim <- function(i.r_ = i.r,
                                              AL.defrRet[j] + 
                                              AL.disbRet[j] + 
                                              AL.death[j])
+      
       penSim$AL[j] <- with(penSim, AL.active[j] + AL.nonactive[j])
       
       penSim$B[j]  <- with(penSim, B.servRet[j] + B.defrRet[j] + B.disbRet[j] + B.death[j]) 
@@ -601,11 +588,11 @@ run_sim <- function(i.r_ = i.r,
         if(!is.na(use_lowerDR)){
           
           penSim$FR_MA_lowerDR[j] <- with(penSim, MA[j] / (AL[j] * cola_lowerDR_fixedALratio))
-          if(penSim$FR_MA_lowerDR[j] >= 0.995) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR # use 99.5 to avoid rounding issue
+          if(penSim$FR_MA_lowerDR[j] >= 0.995) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR # use 99.99 to avoid rounding issue
           
         } else {
           
-          if(penSim$FR_MA[j] >= 0.995) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR # use 99.5 to avoid rounding issue
+          if(penSim$FR_MA[j] >= 0.995) penSim$cola_actual[j] <- cola_max_FR else penSim$cola_actual[j] <- cola_min_FR # use 99.99 to avoid rounding issue
           
         }
         

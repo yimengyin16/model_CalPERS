@@ -280,5 +280,39 @@ saveRDS(
 # x <- names(ls_sftyAll$aggLiab$sftyAll)[5]
 # 100 * (ls_sftyAll$aggLiab$sftyAll[[x]] - ls_mix$aggLiab$sftyAll[[x]])/ls_sftyAll$aggLiab$sftyAll[[x]]
 
+# 
+# ls2 <- readRDS("model/valuation2/outputs_val/val_sfty2t_bf100_cola2.rds")
+# 
+# ls2$aggLiab$sfty_classic$servRet.la
+# ls2$aggLiab$sfty_classic$active
+# 
+# ls2$aggLiab$sfty_classic$servRet.la
+# ls2$aggLiab$sfty_pepra$servRet.la
+# 
+# 
+# ls2$aggLiab$sumTiers$active
+# ls2$aggLiab$sumTiers$servRet.la
+# ls2$aggLiab$sumTiers$disbRet
+# 
+# 44511484637
+# 
+# 
+# 
+# ls <- readRDS("model/valuation2/outputs_val/val_misc2t_bf100_cola2.rds")
+# 
+# ls$aggLiab$misc_classic$servRet.la
+# ls$aggLiab$misc_classic$active
+# 
+# ls$aggLiab$misc_classic$servRet.la
+# ls$aggLiab$misc_pepra$servRet.la
+# 
+# 
+# ls$aggLiab$sumTiers$active
+# ls$aggLiab$sumTiers$servRet.la
+# 
+# 44511484637
+
+
+
 
 

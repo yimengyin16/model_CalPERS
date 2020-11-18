@@ -7,7 +7,7 @@ output:
   word_document:
     toc: yes
 editor_options:
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r loading results, include=FALSE}
@@ -17,8 +17,9 @@ source(paste0(here::here(), "/libraries.R"))
 
 dir_sims <- "model/simulation/outputs_sim2t/"
 
-df_simNames <- 
-tribble(
+# sim names
+{df_simNames <- 
+  tribble(
   ~simName, ~label_benPolicy,
   "misc2t_baseline",                      "Baseline: Current policy",
     
@@ -65,23 +66,98 @@ tribble(
   "sfty2t_benCut2_colaCut2_highERC",      "Combine the two above",
 
   "sfty2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
-  "sfty2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)"
-)
+  "sfty2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
+  
+  "all2t_baseline",                      "Baseliine: Current policy",
 
+  "all2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "all2t_benCut1_highERC",               "Reduce benefit factor by 50%",
+
+  "all2t_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
+  "all2t_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+
+  "all2t_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "all2t_benCut1_colaCut1_highERC",      "Combine the two above",
+
+  "all2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "all2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+
+  "all2t_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "all2t_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+
+  "all2t_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "all2t_benCut2_colaCut2_highERC",      "Combine the two above",
+
+  "all2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
+  "all2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)"
+)
+}
+
+
+#filter(df_simNames, !str_detect(simName, "all2t"))
 
 # df_simNames$simName
 df_results <- 
-  map(df_simNames$simName, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
+  map(filter(df_simNames, !str_detect(simName, "all2t"))$simName, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
   bind_rows() %>% 
-  mutate(NC.ER_PR = 100*(NC - EEC)/PR )  %>% 
-  mutate(
-         #sim_name = str_replace(sim_name, "&", "_"),
-         sim_name = factor(sim_name, levels = df_simNames$simName )
-         )
+  mutate(NC.ER_PR = 100*(NC - EEC)/PR ) 
+  # mutate(
+  #        #sim_name = str_replace(sim_name, "&", "_"),
+  #        sim_name = factor(sim_name, levels = df_simNames$simName )
+  #        )
 
 
 vars_report <- c("sim_name","sim", "year", "AL", "UAAL", "FR_MA", "ERC", "ERC_PR", "NC_PR", "NC.ER_PR", "SC_PR")
 vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
+
+
+## data frame for aggregate results for misc2t and sfty2t
+
+vars_agg <- c("AL", "UAAL", "MA", "AA", "NC", "SC", "ERC", "EEC", "PR")
+
+df_results_agg <- 
+  df_results %>% 
+  mutate(policy_name = str_remove(sim_name, "misc2t_|sfty2t_")) %>% 
+  group_by(policy_name, sim, year) %>% 
+  summarise(
+    AL = sum(AL),
+    MA = sum(MA),
+    AA = sum(AA),
+    UAAL = sum(UAAL),
+    NC = sum(NC),
+    SC = sum(SC),
+    ERC = sum(ERC),
+    EEC = sum(EEC),
+    PR  = sum(PR),
+    B   = sum(B),
+    i.r = i.r[1],
+    .groups = "drop"
+  ) %>% 
+  mutate(sim_name = paste0("all2t_", policy_name),
+         FR_MA  = 100 * MA/AL,
+         ERC_PR = 100 * ERC/PR,
+         EEC_PR = 100 * EEC/PR,
+         NC_PR  = 100 * NC/PR,
+         SC_PR  = 100 * SC/PR,
+         NC.ER_PR = 100 * (NC - EEC)/PR
+         )
+
+df_results <- 
+  bind_rows(df_results,
+            df_results_agg) %>% 
+  mutate(
+         #sim_name = str_replace(sim_name, "&", "_"),
+         sim_name = factor(sim_name, levels = df_simNames$simName )
+         ) %>% 
+  arrange(sim_name, sim, year)
+
+# df_results_agg %>% select(sim, year,  sim_name, policy_name) %>% 
+#   filter(sim == 1, year ==2018) %>% 
+#   group_by(policy_name) %>% 
+#   arrange(policy_name)
+
+
+
 
 ```
 
@@ -194,7 +270,7 @@ bind_rows(
    set_header_labels(values =
                       list(
                       ERCpolicy  = "",
-										  sim_name   = "policy scenario",
+										  sim_name   = "Policy scenario",
 										  y2018_ERC  = "Employer\ncontribution",
 										  y2028_ERC  = "Employer\ncontribution", 
 										  y2018_UAAL = "UAAL",
@@ -228,6 +304,14 @@ bind_rows(
 #make_summaryTable(df_summary_det, "miscAll", "Group: State Misc and Industrial")
 #make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP")
 
+```
+
+
+
+### All state members, 7% return 
+
+```{r, echo=FALSE}
+make_summaryTable(df_summary_det, "all2t", "Group: All state members")
 ```
 
 
@@ -521,12 +605,14 @@ $~$
 
 Cohorts to examine
 
-- retirees who retire in year 1
-- classic member age 50 + entry age 25, assuming retirement age of 55 
-- classic member age 40 + engry age 25, assuming retirement age of 55
+- retirees at age 55 in 2018: misc classic, assuming receiving benefits up to age 85
+- retirees at age 65 in 2018: misc classic, assuming receiving benefits up to age 85
+
+- late-career active member: classic member at age 50 w/ entry age 25 in 2018, assuming retirement age of 55 
+- mid-career  active member: classic member at age 40 w/ entry age 25 in 2018, assuming retirement age of 55
+
 
 What to compare
-
 - Plotting annual benefit: age 55 to 85
 - PV benefit over age 55 to 85, dr = 0.7, valuated at age 55
 
@@ -537,22 +623,400 @@ scenario:
 
 
 
-
-```{r echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 
 
 dir_outputs_val <- "model/valuation2/outputs_val/"
+dir_outputs_sim <- "model/simulation/outputs_sim2t/"
 
 
-df_val <- readRDS(paste0(dir_outputs_val, "val_misc2t_bf100_cola2.rds"))
+get_impactMembers2 <- function(simName,
+                               valName_baseline,
+                               fn_ea  = 25,
+                               fn_age1 = 40,
+                               fn_age2 = 50,
+                               fn_age3 = 65,
+                               fn_ageRet = 55,
+                               dr = 0.07){
+# 
+# simName <- "misc2t_benCut1_lowERC"
+# valName_baseline <-  "misc2t_bf100_cola2"
+# 
+# fn_ea  = 25
+# fn_age1 = 40
+# fn_age2 = 50
+# fn_age3 = 65
+# fn_ageRet = 55
+# dr = 0.07
 
 
-df_val$indivLiab$misc_classic$active %>% 
-  names
+ls_sim <- readRDS(paste0(dir_outputs_sim, paste0("sim_", simName,   ".rds")))
+valName <- ls_sim$sim_paramlist$val_name
+
+df_val_baseline <- readRDS(paste0(dir_outputs_val, paste0("val_", valName_baseline, ".rds")))
+df_val_reduced  <- readRDS(paste0(dir_outputs_val, paste0("val_", valName,".rds")))
+
+
+df_cola <- 
+ls_sim$results %>% 
+  filter(sim %in% c(0, -2)) %>% 
+  select(sim_name, sim, year, cola_actual) %>%
+  mutate(sim = ifelse(sim == 0, "cola_a", "cola_s")) %>% 
+  spread(sim, cola_actual)
+
+
+df_B <- 
+left_join(
+  df_val_baseline$indivLiab$misc_classic$servRet.la %>% 
+    filter( (start_year == 2018 - (fn_age1 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
+            (start_year == 2018 - (fn_age2 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
+            (year_servRet == 2018 & age_servRet == fn_age3) # retiree
+           ) %>% 
+     select(age_servRet, start_year, ea, age, year, B_baseline = B.servRet.la),
+  
+  df_val_reduced$indivLiab$misc_classic$servRet.la %>% 
+    filter( (start_year == 2018 - (fn_age1 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
+            (start_year == 2018 - (fn_age2 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
+            (year_servRet == 2018 & age_servRet == fn_age3) # retiree
+           ) %>% 
+    select(age_servRet, start_year, ea, age, year, B_reduced = B.servRet.la) 
+) %>% 
+# mutate(B_pctChg = B_reduced / B_baseline - 1) %>% 
+arrange(start_year) %>% 
+left_join(df_cola, by = "year")
+
+
+df_B %<>% split(df_B$start_year)
+
+for(i in names(df_B)){
+  #i <- "2003" 
+  
+  df_B[[i]] %<>% 
+    mutate(B_a = ifelse(year == min(year), B_reduced, 0),
+           B_s = ifelse(year == min(year), B_reduced, 0))
+  
+  for(j in df_B[[i]]$year[-1]){
+  #j = 2034
+      df_B[[i]]$B_a[df_B[[i]]$year == j] <- df_B[[i]]$B_a[df_B[[i]]$year == j - 1] * (1 + df_B[[i]]$cola_a[df_B[[i]]$year == j - 1])
+      df_B[[i]]$B_s[df_B[[i]]$year == j] <- df_B[[i]]$B_s[df_B[[i]]$year == j - 1] * (1 + df_B[[i]]$cola_s[df_B[[i]]$year == j - 1])
+  }  
+} 
+  
+df_B %<>% bind_rows() %>% 
+  mutate(B_a_pctChg = B_a / B_baseline - 1,
+         B_s_pctChg = B_s / B_baseline - 1) %>%
+  mutate(age_2018 = ea + 2018 - start_year) %>% 
+  relocate(sim_name, age_2018) 
+ 
+
+
+df_pvB <- 
+  df_B %>% 
+  filter(age <= 85) %>% 
+  group_by(age_2018) %>% 
+  summarise(pvB_baseline    = sum(B_baseline    / (1 + dr)^(age - fn_ageRet)),
+            pvB_a = sum(B_a / (1 + dr)^(age - fn_ageRet)),
+            pvB_s = sum(B_s / (1 + dr)^(age - fn_ageRet))
+            ) %>% 
+  mutate(pvB_a_pctChg = pvB_a / pvB_baseline - 1,
+         pvB_s_pctChg = pvB_s / pvB_baseline - 1,
+         sim_name = simName,
+         age_2018 = paste0("age", age_2018)
+         ) %>% 
+  relocate(sim_name)
+# df_pvB
+
+# inversing the table
+
+df_pvB2 <- 
+  df_pvB %>% 
+  select(sim_name, age_2018, pvB_a_pctChg, pvB_s_pctChg) %>% 
+  gather(Var, value, -sim_name, -age_2018) %>% 
+  spread(age_2018, value)
+  
+
+df <- list(df_B = df_B,
+           df_pvB = df_pvB，
+           df_pvB2 = df_pvB2)
+}
+
+ls_benCut1          <- get_impactMembers2(simName = "misc2t_benCut1_lowERC", valName_baseline = "misc2t_bf100_cola2")
+ls_colaCut1         <- get_impactMembers2(simName = "misc2t_colaCut1_lowERC", valName_baseline = "misc2t_bf100_cola2")
+ls_benCut1_colaCut1 <- get_impactMembers2(simName = "misc2t_benCut1_colaCut1_lowERC", valName_baseline  = "misc2t_bf100_cola2")
+
+
+ls_benCut2          <- get_impactMembers2(simName = "misc2t_benCut2_lowERC", valName_baseline = "misc2t_bf100_cola2")
+ls_colaCut2         <- get_impactMembers2(simName = "misc2t_colaCut2_lowERC", valName_baseline = "misc2t_bf100_cola2")
+ls_benCut2_colaCut2 <- get_impactMembers2(simName = "misc2t_benCut2_colaCut2_lowERC", valName_baseline  = "misc2t_bf100_cola2")
+
+
+
+ls_benCut1$df_pvB2    %>% kable()
+ls_colaCut1$df_pvB2   %>% kable()
+ls_benCut1_colaCut1$df_pvB2 %>% kable()
+
+
+
+
+
+{df_simNames2 <- 
+  tribble(
+  ~simName, ~label_benPolicy,
+  "misc2t_baseline",                      "Baseline: Current policy",
+    
+  "misc2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "misc2t_benCut1_highERC",               "Reduce benefit factor by 50%",
+  
+  "misc2t_colaCut1_lowERC",               "No COLA below 100% funded (7% DR)",
+  "misc2t_colaCut1_highERC",              "No COLA below 100% funded (7% DR)",
+  
+  "misc2t_benCut1_colaCut1_lowERC",       "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
+  "misc2t_benCut1_colaCut1_highERC",      "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
+  
+  "misc2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "misc2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+  
+  "misc2t_colaCut2_lowERC",               "Half COLA below 100% funded (7% DR)",
+  "misc2t_colaCut2_highERC",              "Half COLA below 100% funded (7% DR)",
+  
+  "misc2t_benCut2_colaCut2_lowERC",       "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
+  "misc2t_benCut2_colaCut2_highERC",      "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
+  
+  "misc2t_colaCut2lowerDR_lowERC",        "Half COLA below 100% funded (5% DR)",
+  "misc2t_colaCut2lowerDR_highERC",       "Half COLA below 100% funded (5% DR)")
+}
+
+
+df_tbl_misc_a <-  
+  bind_rows(
+    ls_benCut2$df_pvB2,
+    ls_benCut1$df_pvB2,
+    ls_colaCut2$df_pvB2,
+    ls_colaCut1$df_pvB2,
+    ls_benCut2_colaCut2$df_pvB2,
+    ls_benCut1_colaCut1$df_pvB2
+  ) %>% 
+  left_join(df_simNames2, by=c("sim_name" = "simName") ) %>% 
+  select(policy = label_benPolicy, everything(), -sim_name)
+
+
+df_tbl_misc_a %>% 
+ filter(str_detect(Var, "pvB_a")) %>% 
+ mutate(across(c(-policy, -Var), ~.x*100 )) %>% 
+ select(-Var) %>% 
+ flextable() %>% 
+  
+  # Global settings
+   hrule(rule = "exact", part = "all") %>%
+  
+  # Header
+   add_header_row(values = c("", 
+                            "Reduction in present value of future benefits\nafter policy is implemented"),
+                 colwidths = c(1,3)) %>%
+  
+   theme_booktabs() %>% 
+   add_header_lines(values = "% changes are relative to baseline (current policy)") %>%
+   add_header_lines(values = "Assumes investment returns of 7% every year (based on CalPERS assumptions)" ) %>%
+   # add_header_lines(values = grpName_label) %>%  
+   add_header_lines(values = "Estimated impacts on plan members \nof selected policy alternatives" ) %>%
+   
+   align(align = "center", part = "header")  %>%
+   height(part = "header",   height = .55, i = 1) %>% 
+   height(part = "header",   height = .3, i = 2:3) %>%
+   height(part = "header",   height = .6, i = 4:5) %>% 
+   fontsize(size = 12, part = "header") %>%
+   fontsize(size = 18, part = "header", i = 1) %>%
+   
+   set_header_labels(values =
+                      list(
+										  policy = "Policy scenario",
+										  age40 = "Active member\naged 40 in 2018",
+										  age50 = "Active member\naged 50 in 2018", 
+										  age65 = "Retiree\naged 65 in 2018"
+										  )
+										) %>% 
+  
+   # Body
+   fontsize(size = 12, part = "body") %>% 
+   width(j = 1,   width = 3.2)   %>%
+   width(j = 2:4, width = 1.5)   %>%
+   height(part = "body",   height = .6) %>%
+  
+   #colformat_num(i = c(1), j = 3:6,    digits = 1, prefix = "$") %>% 
+   colformat_num(j = 2:4, digits = 1, suffix = "%") %>% 
+   
+   #hline(part = "body", i = c(1, 8),  border = officer::fp_border(color="gray40", width = 1.5)) %>% 
+   hline(part = "body", i = c(2, 4), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
+   # vline(part = "body", j = c(4), border = officer::fp_border(color="gray40", style = "dotted"))
+   #merge_v( j = "ERCpolicy") %>% 
+   
+  # Footer
+  add_footer_lines(values = "Notes:") %>% 
+  add_footer_lines(values = "- Benefit reductions are calculated based on state miscellaneous members. Results for state safety members are similar.") %>%
+  add_footer_lines(values = "- The illustrative plan members in the table are assumed to retirement at age 55 and live up to age 85.") %>% 
+  #add_footer_lines(values = "- Discount rate in the calcuation of present value: 7%") %>% 
+  add_footer_lines(values = "- Discount rate in the calcuation of present value: 7%") %>% 
+  height(part = "footer",   height = .5) %>% 
+  fontsize(size = 12, part = "footer") 
+
+
+
+
+
+# simName <- "misc2t_colaCut1_lowERC"
+# ls_sim <- readRDS(paste0(dir_outputs_sim, paste0("sim_", simName,   ".rds")))
+# ls_sim$results %>% 
+#   filter(sim %in% c(0, -2)) %>% 
+#   select(sim_name, sim, year, cola_actual, FR_MA) %>%
+#   mutate(sim = ifelse(sim == 0, "cola_a", "cola_s")) 
 
 
 
 ```
+
+
+```{r}
+# Impact on employer contributions, for draft report to Crane
+
+ df <- df_summary_det
+ grpName <- "all2t"
+ grpName_label <-  "Group: all state members"
+  
+ 
+{df_simNames3 <- 
+  tribble(
+  ~simName, ~label_benPolicy,
+  "all2t_baseline",                      "Baseline: Current policy ($billion)",
+  
+  "all2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "all2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+ 
+  "all2t_colaCut2_lowERC",               "Half COLA below 100% funded (7% DR)",
+  "all2t_colaCut1_lowERC",               "No COLA below 100% funded (7% DR)",
+  
+  "all2t_benCut2_colaCut2_lowERC",       "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
+  "all2t_benCut1_colaCut1_lowERC",       "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
+  
+  
+  "all2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+  "all2t_benCut1_highERC",               "Reduce benefit factor by 50%",  
+  
+  "all2t_colaCut2_highERC",              "Half COLA below 100% funded (7% DR)",
+  "all2t_colaCut1_highERC",              "No COLA below 100% funded (7% DR)",
+  
+  "all2t_benCut1_colaCut1_highERC",      "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
+  "all2t_benCut2_colaCut2_highERC",      "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
+  
+  "all2t_colaCut2lowerDR_lowERC",        "Half COLA below 100% funded (5% DR)",
+  "all2t_colaCut2lowerDR_highERC",       "Half COLA below 100% funded (5% DR)")
+}
+
+ 
+df_tbl_impactPlan <-  
+bind_rows(
+  (df %>% 
+    filter(str_detect(sim_name, grpName )) %>% 
+    mutate(ERCpolicy = "")
+   )[1,],
+
+  (df %>% 
+    filter(str_detect(sim_name, grpName)) %>% 
+    mutate(across(!c(sim_name), ~ 100*(.x/.x[1] - 1))) %>% 
+    mutate(ERCpolicy = str_extract(sim_name, "lowERC|highERC"))
+    )[-1,]
+  ) %>%
+  as_tibble() 
+  # mutate(ERCpolicy = factor(ERCpolicy, 
+  #                           levels = c("", "lowERC", "highERC"),
+  #                           labels = c("", "Low ERC", "High ERC")
+  #                           
+  #                           )) %>% 
+  # arrange(ERCpolicy) %>% 
+  # relocate(ERCpolicy) 
+  # %>% 
+  # mutate(sim_name = factor(sim_name, 
+  #                          levels = df_simNames$simName, 
+  #                          labels = df_simNames$label_benPolicy)
+  #        )
+
+df_tbl_impactPlan %<>% 
+  filter(!str_detect(sim_name, "lowerDR")) %>% 
+  #left_join(df_simNames3, by = c("sim_name" = "simName")) %>% 
+  mutate(sim_name = factor(sim_name, 
+                           levels = df_simNames3$simName,
+                           labels = df_simNames3$label_benPolicy)) %>% 
+  filter(ERCpolicy != "highERC") %>% 
+  select(ERCpolicy, sim_name, everything(), -ERCpolicy) %>% 
+ 
+  arrange(sim_name)
+ 
+
+df_tbl_impactPlan %>% 
+   flextable() %>% 
+  
+  # Global settings
+   hrule(rule = "exact", part = "all") %>%
+  
+  # Header
+   add_header_row(values = c("", 
+                            "2018",
+                            "2028"),
+                 colwidths = c(1,2,2)) %>%
+  
+   theme_booktabs() %>% 
+   add_header_lines(values = "% changes are relative to baseline (current policy)" ) %>%
+   add_header_lines(values = "Assumes investment returns of 7% every year (based on CalPERS assumptions)" ) %>%
+   add_header_lines(values = grpName_label) %>%  
+   add_header_lines(values = "Estimated impacts on employer contributions\nof selected policy alternatives" ) %>%
+   
+   align(align = "center", part = "header")  %>%
+   height(part = "header",   height = .5, i = 1) %>% 
+   height(part = "header",   height = .3, i = 2) %>% 
+   height(part = "header",   height = .25, i = 3:4) %>% 
+   height(part = "header",   height = .5, i = 5:6) %>% 
+   fontsize(size = 12, part = "header") %>%
+   fontsize(size = 18, part = "header", i = 1) %>% 
+   fontsize(size = 16, part = "header", i = 2) %>% 
+   
+   set_header_labels(values =
+                      list(
+                      #ERCpolicy  = "",
+										  sim_name   = "Policy scenario",
+										  y2018_ERC  = "Employer\ncontribution",
+										  y2028_ERC  = "Employer\ncontribution", 
+										  y2018_UAAL = "UAAL",
+										  y2028_UAAL = "UAAL"
+										  )
+										) %>% 
+  
+   # Body
+   fontsize(size = 12, part = "body") %>% 
+   #width(j = 1,   width = 0.6)   %>%
+   width(j = 1,   width = 3.2)   %>%
+   width(j = 2:5, width = 1.2) %>%
+   height(part = "body",   height = .6) %>%
+  
+   colformat_num(i = c(1), j = 2:5,    digits = 1, prefix = "$") %>% 
+   colformat_num(i = c(2:7), j = 2:5, digits = 1, suffix = "%") %>% 
+   
+   hline(part = "body", i = c(1), border = officer::fp_border(color="gray40", width = 1.5)) %>% 
+   hline(part = "body", i = c(3, 5), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
+   # vline(part = "body", j = c(4), border = officer::fp_border(color="gray40", style = "dotted"))
+   # merge_v( j = "ERCpolicy") %>% 
+   
+  # Footer
+  add_footer_lines(values = "Notes:") %>% 
+  add_footer_lines(values = "Employer contributions are reduced to reflect lower actuarially determined contributions (ADC)") %>% 
+  # add_footer_lines(values = "High ERC: Employer contributions are approximately maintained despite drop in ADC") %>% 
+  height(part = "footer",   height = .5) %>% 
+  fontsize(size = 12, part = "footer") 
+
+
+```
+
+
+
+
 
 
 

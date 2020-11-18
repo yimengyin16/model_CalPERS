@@ -581,6 +581,18 @@ df_n_actives_tier <-
 # model/target: 6710663988/(2316124913 + 3522647266 + 871895121) = 99.99%
 
 
+# Keep classic members only
+#  assume 
+#    - members with yos <= 4 are all pepra members
+#    - 50% of members with yos == 5 are pepra members
+#    - the rest are classic membrs 
+
+df_n_actives_tier %<>% 
+  mutate(nactives = case_when(
+    yos <= 4 ~ 0,
+    yos == 5 ~ nactives * 0.5,
+    TRUE ~ nactives
+  ))
 
 
 ## Service retirees

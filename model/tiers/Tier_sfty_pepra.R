@@ -573,6 +573,20 @@ df_n_actives_tier <-
 # model/target: 6710663988/(2316124913 + 3522647266 + 871895121) = 99.99%
 
 
+# Keep PEPRA members only
+#  assume 
+#    - members with yos <= 4 are all pepra members
+#    - 50% of members with yos == 5 are pepra members
+#    - the rest are classic membrs 
+
+df_n_actives_tier %<>% 
+  mutate(nactives = case_when(
+    yos <= 4 ~ nactives,
+    yos == 5 ~ nactives * 0.5,
+    TRUE ~ 0
+  ))
+
+
 
 
 ## Service retirees
@@ -606,7 +620,9 @@ df_n_servRet_tier <-
 # (df_n_servRet_tier$n_servRet*df_n_servRet_tier$benefit_servRet) %>% sum
 # model/target:2492264817/2492264816 = 100%
 
-
+# assume all service retirees are classic members
+df_n_servRet_tier %<>% 
+  mutate(n_servRet = 0)
 
 
 
@@ -638,6 +654,11 @@ df_n_disbRet_tier <-
 # CalPERS: Check total benefit againt the AV value (AV2018 ep141-145)
 # (df_n_disbRet_tier$n_disbRet*df_n_disbRet_tier$benefit_disbRet) %>% sum
 # model/target:773929137/ 774100780 = 99.97783%
+
+# Assume all disability retirees are classic members
+df_n_disbRet_tier %<>% 
+  mutate(n_distRet = 0)
+
 
 ## View the results
 # df_n_actives_tier
