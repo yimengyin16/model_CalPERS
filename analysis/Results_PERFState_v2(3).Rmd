@@ -44,6 +44,9 @@ dir_sims <- "model/simulation/outputs_sim2t/"
   "misc2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
   "misc2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
   
+  "misc2t_colaCut1lowerDR_lowERC",        "No COLA until 100% funded (5%DR)",
+  "misc2t_colaCut1lowerDR_highERC",       "No COLA until 100% funded (5%DR)",
+  
   
   "sfty2t_baseline",                      "Baseliine: Current policy",
 
@@ -68,6 +71,9 @@ dir_sims <- "model/simulation/outputs_sim2t/"
   "sfty2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
   "sfty2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
   
+  "sfty2t_colaCut1lowerDR_lowERC",        "No COLA until 100% funded (5%DR)",
+  "sfty2t_colaCut1lowerDR_highERC",       "No COLA until 100% funded (5%DR)",
+  
   "all2t_baseline",                      "Baseliine: Current policy",
 
   "all2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
@@ -89,7 +95,10 @@ dir_sims <- "model/simulation/outputs_sim2t/"
   "all2t_benCut2_colaCut2_highERC",      "Combine the two above",
 
   "all2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
-  "all2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)"
+  "all2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
+  
+  "all2t_colaCut1lowerDR_lowERC",        "No COLA until 100% funded (5%DR)",
+  "all2t_colaCut1lowerDR_highERC",       "No COLA until 100% funded (5%DR)"
 )
 }
 
@@ -430,7 +439,9 @@ grpName_label <- switch (grpName,
                          miscAll = "Group: State misc and industrial",
                          sftyAll = "Group: State safety, POFF, and CHP",
                          misc2t = "Group: State misc and industrial",
-                         sfty2t = "Group: State safety, POFF, and CHP")
+                         sfty2t = "Group: State safety, POFF, and CHP",
+                         all2t  = "Group: All state members",
+                         )
 
 return_label <- switch (as.character(sim_select),
   "0"  = "Assumes investment returns of 7% every year (based on CalPERS assumptions)",
@@ -566,6 +577,12 @@ bind_rows(
 
 ## Deterministic results, with 7% annual returns {.tabset}
 
+
+### All state members
+```{r echo=FALSE}
+make_summaryTable_detailed("all2t", 0)
+```
+
 ### State misc
 ```{r echo=FALSE}
 make_summaryTable_detailed("misc2t", 0)
@@ -580,6 +597,11 @@ make_summaryTable_detailed("sfty2t", 0)
 
 
 ## Asset shock scenario (24% decline in portfolio) {.tabset}
+
+### all state members
+```{r echo=FALSE}
+make_summaryTable_detailed("all2t", -2)
+```
 
 ### State misc
 ```{r echo=FALSE}
@@ -863,12 +885,20 @@ df_tbl_misc_a %>%
 
 
 
-# simName <- "misc2t_colaCut1_lowERC"
-# ls_sim <- readRDS(paste0(dir_outputs_sim, paste0("sim_", simName,   ".rds")))
-# ls_sim$results %>% 
-#   filter(sim %in% c(0, -2)) %>% 
-#   select(sim_name, sim, year, cola_actual, FR_MA) %>%
-#   mutate(sim = ifelse(sim == 0, "cola_a", "cola_s")) 
+simName <- "misc2t_colaCut1_lowERC"
+ls_sim <- readRDS(paste0(dir_outputs_sim, paste0("sim_", simName,   ".rds")))
+ls_sim$results %>%
+  filter(sim %in% c(0)) %>%
+  select(sim_name, sim, year, cola_actual, FR_MA) %>%
+  mutate(sim = ifelse(sim == 0, "cola_a", "cola_s"))
+
+
+simName <- "misc2t_colaCut1lowerDR_lowERC"
+ls_sim <- readRDS(paste0(dir_outputs_sim, paste0("sim_", simName,   ".rds")))
+ls_sim$results %>%
+  filter(sim %in% c(0)) %>%
+  select(sim_name, sim, year, cola_actual, FR_MA) %>%
+  mutate(sim = ifelse(sim == 0, "cola_a", "cola_s"))
 
 
 
@@ -1010,6 +1040,12 @@ df_tbl_impactPlan %>%
   # add_footer_lines(values = "High ERC: Employer contributions are approximately maintained despite drop in ADC") %>% 
   height(part = "footer",   height = .5) %>% 
   fontsize(size = 12, part = "footer") 
+
+
+
+
+
+
 
 
 ```
