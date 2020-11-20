@@ -1,8 +1,6 @@
 ## This script conducts the simulation of the finance of the plan
 
-## What's new in version (4)
-#    - contingent COLA with multiple tiers. 
-
+## What's new in version (5)
 # Temp: initial cola_acual = 0.02
 
 
