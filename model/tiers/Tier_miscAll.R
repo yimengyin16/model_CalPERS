@@ -546,6 +546,16 @@ df_n_servRet_tier <-
   arrange(age) %>% 
   ungroup()
 
+# df_n_servRet_fillin %>% 
+#   filter(grp %in% grp_include) %>% 
+#   summarise(age_avg = weighted.mean(age, n_servRet))
+# 
+# df_n_beneficiaries_fillin %>% 
+#   filter(grp %in% grp_include) %>% 
+#   summarise(age_avg = weighted.mean(age, n_beneficiaries))
+
+
+
 # CalPERS: Check total benefit againt the AV value (AV2018 ep141-145)
 # Note payments for beneficiaries (death after retirement) are included
 # (df_n_servRet_tier$n_servRet*df_n_servRet_tier$benefit_servRet) %>% sum

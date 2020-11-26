@@ -576,6 +576,13 @@ df_n_servRet_tier <-
 # (df_n_servRet_tier$n_servRet*df_n_servRet_tier$benefit_servRet) %>% sum
 # model/target:2492264817/2492264816 = 100%
 
+# df_n_servRet_fillin %>%
+#   filter(grp %in% grp_include) %>%
+#   summarise(age_avg = weighted.mean(age, n_servRet))
+# 
+# df_n_beneficiaries_fillin %>%
+#   filter(grp %in% grp_include) %>%
+#   summarise(age_avg = weighted.mean(age, n_beneficiaries))
 
 
 
