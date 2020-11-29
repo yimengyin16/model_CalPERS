@@ -658,7 +658,7 @@ get_impactMembers2 <- function(simName,
                                valName_baseline,
                                fn_ea  = 25,
                                fn_age1 = 45,
-                               fn_age2 = 50,
+                               fn_age2 = 55,
                                fn_age3 = 65,
                                fn_ageRet = 55,
                                dr = 0.07){
@@ -688,19 +688,22 @@ ls_sim$results %>%
   mutate(sim = ifelse(sim == 0, "cola_a", "cola_s")) %>% 
   spread(sim, cola_actual)
 
+tier_select <- paste0(str_extract(simName, "sfty|misc"), "_classic")
 
 df_B <- 
 left_join(
-  df_val_baseline$indivLiab$misc_classic$servRet.la %>% 
+  df_val_baseline$indivLiab[[tier_select]]$servRet.la %>% 
     filter( (start_year == 2018 - (fn_age1 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
-            (start_year == 2018 - (fn_age2 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
-            (year_servRet == 2018 & age_servRet == fn_age3) # retiree
+            #(start_year == 2018 - (fn_age2 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
+             (year_servRet == 2018 & age_servRet == fn_age2)| # retiree
+             (year_servRet == 2018 & age_servRet == fn_age3) # retiree
            ) %>% 
      select(age_servRet, start_year, ea, age, year, B_baseline = B.servRet.la),
   
-  df_val_reduced$indivLiab$misc_classic$servRet.la %>% 
+  df_val_reduced$indivLiab[[tier_select]]$servRet.la %>% 
     filter( (start_year == 2018 - (fn_age1 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
-            (start_year == 2018 - (fn_age2 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
+            #(start_year == 2018 - (fn_age2 - fn_ea) & ea == fn_ea & age_servRet ==  fn_ageRet)|
+            (year_servRet == 2018 & age_servRet == fn_age2)| # retiree
             (year_servRet == 2018 & age_servRet == fn_age3) # retiree
            ) %>% 
     select(age_servRet, start_year, ea, age, year, B_reduced = B.servRet.la) 
@@ -764,14 +767,14 @@ df <- list(df_B = df_B,
            df_pvB2 = df_pvB2)
 }
 
-ls_benCut1          <- get_impactMembers2(simName = "misc2t_benCut1_lowERC", valName_baseline = "misc2t_bf100_cola2")
-ls_colaCut1         <- get_impactMembers2(simName = "misc2t_colaCut1_lowERC", valName_baseline = "misc2t_bf100_cola2")
-ls_benCut1_colaCut1 <- get_impactMembers2(simName = "misc2t_benCut1_colaCut1_lowERC", valName_baseline  = "misc2t_bf100_cola2")
+ls_benCut1          <- get_impactMembers2(simName = "sfty2t_benCut1_lowERC", valName_baseline = "sfty2t_bf100_cola2")
+ls_colaCut1         <- get_impactMembers2(simName = "sfty2t_colaCut1_lowERC", valName_baseline = "sfty2t_bf100_cola2")
+ls_benCut1_colaCut1 <- get_impactMembers2(simName = "sfty2t_benCut1_colaCut1_lowERC", valName_baseline  = "sfty2t_bf100_cola2")
 
 
-ls_benCut2          <- get_impactMembers2(simName = "misc2t_benCut2_lowERC", valName_baseline = "misc2t_bf100_cola2")
-ls_colaCut2         <- get_impactMembers2(simName = "misc2t_colaCut2_lowERC", valName_baseline = "misc2t_bf100_cola2")
-ls_benCut2_colaCut2 <- get_impactMembers2(simName = "misc2t_benCut2_colaCut2_lowERC", valName_baseline  = "misc2t_bf100_cola2")
+ls_benCut2          <- get_impactMembers2(simName = "sfty2t_benCut2_lowERC", valName_baseline = "sfty2t_bf100_cola2")
+ls_colaCut2         <- get_impactMembers2(simName = "sfty2t_colaCut2_lowERC", valName_baseline = "sfty2t_bf100_cola2")
+ls_benCut2_colaCut2 <- get_impactMembers2(simName = "sfty2t_benCut2_colaCut2_lowERC", valName_baseline  = "sfty2t_bf100_cola2")
 
 
 
@@ -786,42 +789,53 @@ ls_benCut1_colaCut1$df_pvB2 %>% kable()
 {df_simNames2 <- 
   tribble(
   ~simName, ~label_benPolicy,
-  "misc2t_baseline",                      "Baseline: Current policy",
+  "sfty2t_baseline",                      "Baseline: Current policy",
     
-  "misc2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
-  "misc2t_benCut1_highERC",               "Reduce benefit factor by 50%",
+  "sfty2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "sfty2t_colaCut1_lowERC",               "No COLA below 100% funded (7% DR)",
+  "sfty2t_benCut1_colaCut1_lowERC",       "Combine the two above",
   
-  "misc2t_colaCut1_lowERC",               "No COLA below 100% funded (7% DR)",
-  "misc2t_colaCut1_highERC",              "No COLA below 100% funded (7% DR)",
-  
-  "misc2t_benCut1_colaCut1_lowERC",       "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
-  "misc2t_benCut1_colaCut1_highERC",      "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
-  
-  "misc2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
-  "misc2t_benCut2_highERC",               "Reduce benefit factor by 25%",
-  
-  "misc2t_colaCut2_lowERC",               "Half COLA below 100% funded (7% DR)",
-  "misc2t_colaCut2_highERC",              "Half COLA below 100% funded (7% DR)",
-  
-  "misc2t_benCut2_colaCut2_lowERC",       "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
-  "misc2t_benCut2_colaCut2_highERC",      "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
-  
-  "misc2t_colaCut2lowerDR_lowERC",        "Half COLA below 100% funded (5% DR)",
-  "misc2t_colaCut2lowerDR_highERC",       "Half COLA below 100% funded (5% DR)")
+  "sfty2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "sfty2t_colaCut2_lowERC",               "Half COLA below 100% funded (7% DR)",
+  "sfty2t_benCut2_colaCut2_lowERC",       "Combine the two above"
+  # 
+  # "sfty2t_benCut1_highERC",               "Reduce benefit factor by 50%",
+  # 
+  # 
+  # "sfty2t_colaCut1_highERC",              "No COLA below 100% funded (7% DR)",
+  # 
+  # 
+  # "sfty2t_benCut1_colaCut1_highERC",      "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
+  # 
+  # 
+  # "sfty2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+  # 
+  # 
+  # "sfty2t_colaCut2_highERC",              "Half COLA below 100% funded (7% DR)",
+  # 
+  # 
+  # "sfty2t_benCut2_colaCut2_highERC",      "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
+  # 
+  # "sfty2t_colaCut2lowerDR_lowERC",        "Half COLA below 100% funded (5% DR)",
+  # "sfty2t_colaCut2lowerDR_highERC",       "Half COLA below 100% funded (5% DR)"
+  )
 }
 
 
 df_tbl_misc_a <-  
   bind_rows(
-    ls_benCut2$df_pvB2,
     ls_benCut1$df_pvB2,
-    ls_colaCut2$df_pvB2,
     ls_colaCut1$df_pvB2,
-    ls_benCut2_colaCut2$df_pvB2,
-    ls_benCut1_colaCut1$df_pvB2
+    ls_benCut1_colaCut1$df_pvB2,
+    
+    ls_benCut2$df_pvB2,
+    ls_colaCut2$df_pvB2,
+    ls_benCut2_colaCut2$df_pvB2
+    
   ) %>% 
   left_join(df_simNames2, by=c("sim_name" = "simName") ) %>% 
-  select(policy = label_benPolicy, everything(), -sim_name)
+  select(policy = label_benPolicy, everything(), -sim_name)  
+  #mutate(policy = factor(policy, levels = df_simNames2))
 
 
 df_tbl_misc_a %>% 
@@ -842,7 +856,7 @@ df_tbl_misc_a %>%
    add_header_lines(values = "% changes are relative to baseline (current policy)") %>%
    add_header_lines(values = "Assumes investment returns of 7% every year (based on CalPERS assumptions)" ) %>%
    # add_header_lines(values = grpName_label) %>%  
-   add_header_lines(values = "Estimated impacts on plan members \nof selected policy alternatives" ) %>%
+   add_header_lines(values = "Estimated impacts on illustrative state peace officers\nof selected policy alternatives" ) %>%
    
    align(align = "center", part = "header")  %>%
    height(part = "header",   height = .55, i = 1) %>% 
@@ -854,8 +868,8 @@ df_tbl_misc_a %>%
    set_header_labels(values =
                       list(
 										  policy = "Policy scenario",
-										  age40 = "Active member\naged 40 in 2018",
-										  age50 = "Active member\naged 50 in 2018", 
+										  age45 = "Active member\naged 45 in 2018",
+										  age55 = "Retiree\naged 55 in 2018", 
 										  age65 = "Retiree\naged 65 in 2018"
 										  )
 										) %>% 
@@ -870,13 +884,12 @@ df_tbl_misc_a %>%
    colformat_num(j = 2:4, digits = 1, suffix = "%") %>% 
    
    #hline(part = "body", i = c(1, 8),  border = officer::fp_border(color="gray40", width = 1.5)) %>% 
-   hline(part = "body", i = c(2, 4), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
+   hline(part = "body", i = c(3), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
    # vline(part = "body", j = c(4), border = officer::fp_border(color="gray40", style = "dotted"))
    #merge_v( j = "ERCpolicy") %>% 
    
   # Footer
   add_footer_lines(values = "Notes:") %>% 
-  add_footer_lines(values = "- Benefit reductions are calculated based on state miscellaneous members. Results for state safety members are similar.") %>%
   add_footer_lines(values = "- The illustrative plan members in the table are assumed to retirement at age 55 and live up to age 85.") %>% 
   #add_footer_lines(values = "- Discount rate in the calcuation of present value: 7%") %>% 
   add_footer_lines(values = "- Discount rate in the calcuation of present value: 7%") %>% 
