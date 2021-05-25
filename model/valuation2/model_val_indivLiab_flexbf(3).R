@@ -231,6 +231,8 @@ liab_active %<>%
 cat("......DONE\n")
 
 
+liab_active %>% head
+
 
 #*******************************************************************************
 #          1.1 Service Retirement: AL and benefits for retirees            #####                  
@@ -255,7 +257,7 @@ liab_active %<>%
 			# TEMP: assuming constant benefit factor for safety members (similar to the 3%@50 rule for POFF )
 			grp %in% c("sftyAll", "sfty_classic", "poff_classic") ~ 1,
 			
-			grp %in% c("sfty_pepra, poff_classic") & age %in% 50:57 ~ 1 - (57 - age) * (0.2/7),
+			grp %in% c("sfty_pepra, poff_pepra") & age %in% 50:57 ~ 1 - (57 - age) * (0.2/7),
 			# grp %in% c("sfty_pepra") & age > 57 ~ 1.25,
 			
 			TRUE ~ 1),
@@ -269,6 +271,12 @@ liab_active %<>%
 		
 		Bx.servRet.laca  = gx.servRet.laca * Bx # benefit in the first retirement year if retirement age = x
 		)
+
+# select(liab_active, grp, year,  start_year, ea, age, Bx, sx, yos, fas, benReduction, gx.servRet.laca,  Bx.servRet.laca, pxm_servRet) %>%
+#    filter(start_year == 1995, ea == 30)
+
+
+
 
 
 ## Benefit payments and ALs for initial service retirees
@@ -341,8 +349,10 @@ liab_servRet.la <-
 	# arrange(start_year, ea, age_servRet) %>% 
 	mutate(year   = start_year + age - ea) %>% 
 	as.data.frame
-# select(liab_active, year,  start_year, ea, age, Bx, sx, yos, fas,  Bx.servRet.laca, pxm_servRet) %>% 
-#    filter(start_year == 1989, ea == 30)
+
+# select(liab_active, year,  start_year, ea, age, Bx, sx, yos, fas,  Bx.servRet.laca, pxm_servRet) %>%
+#    filter(start_year == 1995, ea == 30)
+
 
 
 # Calculate benefit and AL
@@ -393,8 +403,8 @@ liab_servRet.la <-
 cat("......DONE\n")
 # liab_servRet.la %>% head
 
-
-
+# liab_servRet.la %>% 
+#   filter(start_year >= 2018)
 
 #*******************************************************************************
 #      1.2  Service Retirement: ALs and NCs for actives #####                  
@@ -620,8 +630,8 @@ cat("Disability Retirement - actives")
 # Calculate normal costs and liabilities of retirement benefits with multiple retirement ages
 liab_active %<>% 
   mutate( gx.disbRet  = case_when(
-                          grp %in% c("miscAll") ~ as.numeric(yos >= 5),
-                          grp %in% c("sftyAll") ~ 1,
+                          grp %in% c("miscAll", "misc_classic", "misc_pepra") ~ as.numeric(yos >= 5),
+                          grp %in% c("sftyAll", "sfty_classic", "sfty_pepra", "poff_classic", "poff_pepra") ~ 1,
                           TRUE ~ 0
                           ),
   				
@@ -634,10 +644,10 @@ liab_active %<>%
   			
   				Bx.disbRet  = case_when(
   				    # PERF A non-industrial disability benefit policy
-  				    grp %in% c("miscAll") ~ gx.disbRet * pmin(1/3 * fas, 0.018 * yos_proj_disbRet * fas, na.rm = TRUE),
+  				    grp %in% c("miscAll", "misc_classic", "misc_pepra") ~ gx.disbRet * pmin(1/3 * fas, 0.018 * yos_proj_disbRet * fas, na.rm = TRUE),
   				    
   				    # PERF A industrial disability benefit policy
-  				    grp %in% c("sftyAll") ~ gx.disbRet * 0.5 * fas,
+  				    grp %in% c("sftyAll", "sfty_classic", "sfty_pepra", "poff_classic", "poff_pepra" ) ~ gx.disbRet * 0.5 * fas,
   				    TRUE ~ 0
   				  ),
   				  

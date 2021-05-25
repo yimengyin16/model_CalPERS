@@ -390,7 +390,7 @@ df_salScale.merit_imputed <-
     df_salScale.merit_raw %>% 
       filter(grp %in% c("poff", "chp")) %>% 
       unite("grp_ea", grp, ea, sep = "+") %>% 
-      splong("yos", fitrange = 10:55) %>% 
+      splong("yos", fitrange = 0:55) %>% 
       group_by(grp_ea) %>% 
       mutate(salScale.merit = ifelse(salScale.merit<0, 0, salScale.merit),
              salScale.merit = ifelse(yos > 30, salScale.merit[yos == 30], salScale.merit)
@@ -447,7 +447,7 @@ save(
 
   df_salScale.merit_imputed,
 
-	file = paste0(dir_dataOut, "Data_CalPERS_decrements_ES2017_imputed.RData")
+	file = paste0(dir_outputs, "Data_CalPERS_decrements_ES2017_imputed.RData")
 )
 
 

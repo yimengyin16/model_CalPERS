@@ -41,7 +41,7 @@ get_demographics <- function(ls_tierData_,
 # Global_paramlist_ <- Global_paramlist
 # val_paramlist_    <- val_paramlist
 
-newEnt_byTier <- c(0, 1) # for now only allow for new entrants in the first tier. 
+newEnt_byTier <- c(0, 1) # for now only allow for new entrants in the second tier. 
 names(newEnt_byTier) <- names(ls_tierData_)  
   
   
@@ -544,7 +544,7 @@ for (j in 1:(nyear - 1)){
   ls_NE <- calc_entrants_allTiers(newEnt_byTier_ = newEnt_byTier, 
                                   delta = val_paramlist_$wf_growth)
   
-  ls_NE$miscAll$ne
+  # ls_NE$miscAll$ne
   
   for (tierName in names(ls_demo)){
     ls_demo[[tierName]]$temp$new_entrants <- ls_NE[[tierName]]$ne

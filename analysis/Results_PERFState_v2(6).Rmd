@@ -7,7 +7,7 @@ output:
   word_document:
     toc: yes
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r loading results, include=FALSE}
@@ -98,7 +98,34 @@ dir_sims <- "model/simulation/outputs_sim2t/"
   "all2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
   
   "all2t_colaCut1lowerDR_lowERC",        "No COLA until 100% funded (5%DR)",
-  "all2t_colaCut1lowerDR_highERC",       "No COLA until 100% funded (5%DR)"
+  "all2t_colaCut1lowerDR_highERC",       "No COLA until 100% funded (5%DR)",
+  
+  
+  "poff2t_baseline",                      "Baseliine: Current policy",
+
+  "poff2t_benCut1_lowERC",                "Reduce benefit factor \nfor future service by 50%",
+  "poff2t_benCut1_highERC",               "Reduce benefit factor \nfor future service by 50%",
+
+  "poff2t_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
+  "poff2t_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+
+  "poff2t_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "poff2t_benCut1_colaCut1_highERC",      "Combine the two above",
+
+  "poff2t_benCut2_lowERC",                "Reduce benefit factor \nfor future service by 25%",
+  "poff2t_benCut2_highERC",               "Reduce benefit factor \nfor future service by 25%",
+
+  "poff2t_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "poff2t_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+
+  "poff2t_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "poff2t_benCut2_colaCut2_highERC",      "Combine the two above"
+  # 
+  # "poff2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
+  # "poff2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
+  # 
+  # "poff2t_colaCut1lowerDR_lowERC",        "No COLA until 100% funded (5%DR)",
+  # "poff2t_colaCut1lowerDR_highERC",       "No COLA until 100% funded (5%DR)"
 )
 }
 
@@ -126,6 +153,7 @@ vars_agg <- c("AL", "UAAL", "MA", "AA", "NC", "SC", "ERC", "EEC", "PR")
 
 df_results_agg <- 
   df_results %>% 
+  filter(!str_detect(sim_name, "poff2t")) %>% 
   mutate(policy_name = str_remove(sim_name, "misc2t_|sfty2t_")) %>% 
   group_by(policy_name, sim, year) %>% 
   summarise(
@@ -148,7 +176,8 @@ df_results_agg <-
          EEC_PR = 100 * EEC/PR,
          NC_PR  = 100 * NC/PR,
          SC_PR  = 100 * SC/PR,
-         NC.ER_PR = 100 * (NC - EEC)/PR
+         NC.ER_PR = 100 * (NC - EEC)/PR,
+         NC.ER    =  NC - EEC
          )
 
 df_results <- 
@@ -165,10 +194,14 @@ df_results <-
 #   group_by(policy_name) %>% 
 #   arrange(policy_name)
 # df_results$sim_name
-# 
-# df_results %>% 
-#   filter(sim_name ==  "all2t_baseline", year %in% c(2018, 2028), sim == 0) %>% 
-#   select(sim_name, sim, year, FR_MA, NC, NC.ER_PR, SC, ERC, PR, Amort_basis)
+
+df_results %>%
+  filter(sim_name %in%  c("all2t_baseline", 
+                          "all2t_benCut1_lowERC", 
+                          "all2t_colaCut1_lowERC",
+                          "all2t_benCut1_colaCut1_lowERC"), 
+         year %in% c(2018), sim == 0) %>%
+  select(sim_name, year, FR_MA,NC, NC.ER, SC, ERC, EEC_PR, UAAL, AL)
 
 ```
 
@@ -900,9 +933,6 @@ df_tbl_misc_a %>%
   height(part = "footer",   height = .5) %>% 
   fontsize(size = 12, part = "footer") 
 
-
-
-
 # 
 # simName <- "misc2t_colaCut1_lowERC"
 # ls_sim <- readRDS(paste0(dir_outputs_sim, paste0("sim_", simName,   ".rds")))
@@ -1067,41 +1097,43 @@ df_tbl_impactPlan %>%
 
 
 ```{r}
-# Impact on employer contributions, all state members for draft report to Crane
+# Impact on employer contributions, POFF members for draft report to Crane
 
  df <- df_summary_det
- grpName <- "all2t"
- grpName_label <-  "Group: all state members"
+ grpName <- "poff2t"
+ grpName_label <-  "Group: State Peace Officers and Firefighters"
   
  
-{df_simNames3 <- 
+{df_simNames_poff <- 
   tribble(
   ~simName, ~label_benPolicy,
-  "all2t_baseline",                      "Baseline: Current policy ($billion)",
+  "poff2t_baseline",                      "Baseline: Current policy ($billion)",
   
   
-  "all2t_benCut1_lowERC",                "Reduce benefit factor\n for future service by 50%",
-  "all2t_colaCut1_lowERC",               "No COLA below 100% funded (7% DR)",
-  "all2t_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "poff2t_benCut1_lowERC",                "Reduce benefit factor\n for future service by 50%",
+  "poff2t_colaCut1_lowERC",               "No COLA below 100% funded (7% DR)",
+  "poff2t_benCut1_colaCut1_lowERC",       "Combine the two above",
   
-  "all2t_benCut2_lowERC",                "Reduce benefit factor\n for future service  by 25%",
-  "all2t_colaCut2_lowERC",               "Half COLA below 100% funded (7% DR)",
-  "all2t_benCut2_colaCut2_lowERC",       "Combine the two above"
+  "poff2t_benCut2_lowERC",                "Reduce benefit factor\n for future service  by 25%",
+  "poff2t_colaCut2_lowERC",               "Half COLA below 100% funded (7% DR)",
+  "poff2t_benCut2_colaCut2_lowERC",       "Combine the two above"
   
-  # "all2t_benCut2_highERC",               "Reduce benefit factor by 25%",
-  # "all2t_benCut1_highERC",               "Reduce benefit factor by 50%",  
+  # "poff2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+  # "poff2t_benCut1_highERC",               "Reduce benefit factor by 50%",  
   # 
-  # "all2t_colaCut2_highERC",              "Half COLA below 100% funded (7% DR)",
-  # "all2t_colaCut1_highERC",              "No COLA below 100% funded (7% DR)",
+  # "poff2t_colaCut2_highERC",              "Half COLA below 100% funded (7% DR)",
+  # "poff2t_colaCut1_highERC",              "No COLA below 100% funded (7% DR)",
   # 
-  # "all2t_benCut1_colaCut1_highERC",      "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
-  # "all2t_benCut2_colaCut2_highERC",      "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
+  # "poff2t_benCut1_colaCut1_highERC",      "Reduce benefit factor by 50% and \nNo COLA below 100% funded (7% DR)",
+  # "poff2t_benCut2_colaCut2_highERC",      "Reduce benefit factor by 25% and \nHalf COLA below 100% funded (7% DR)",
   # 
-  # "all2t_colaCut2lowerDR_lowERC",        "Half COLA below 100% funded (5% DR)",
-  # "all2t_colaCut2lowerDR_highERC",       "Half COLA below 100% funded (5% DR)"
+  # "poff2t_colaCut2lowerDR_lowERC",        "Half COLA below 100% funded (5% DR)",
+  # "poff2t_colaCut2lowerDR_highERC",       "Half COLA below 100% funded (5% DR)"
   )
 }
 
+ 
+ 
  
 df_tbl_impactPlan <-  
 bind_rows(
@@ -1134,8 +1166,8 @@ df_tbl_impactPlan %<>%
   filter(!str_detect(sim_name, "lowerDR")) %>% 
   #left_join(df_simNames3, by = c("sim_name" = "simName")) %>% 
   mutate(sim_name = factor(sim_name, 
-                           levels = df_simNames3$simName,
-                           labels = df_simNames3$label_benPolicy)) %>% 
+                           levels = df_simNames_poff$simName,
+                           labels = df_simNames_poff$label_benPolicy)) %>% 
   filter(ERCpolicy != "highERC") %>% 
   select(ERCpolicy, sim_name, everything(), -ERCpolicy)# %>% 
  
@@ -1308,8 +1340,6 @@ tab_sftyAll_det_lowERC
 # ![](C:/Git/Proj_CAPlans/model_CalPERS/analysis/PlanInfo.png)
 # ![](https://app.lucidchart.com/publicSegments/view/be8af79b-9988-4194-9744-da60cb0a45d5/image.png)
 ```
-
-
 
 
 ```{r eval=FALSE, include=FALSE}
@@ -1653,11 +1683,14 @@ ls_eg_sfty_benCut1_colaCut1$df_summary3 %>% kable()
 #ls_eg_misc_colaCut1$df_summary3 %>% kable() 
 ls_eg_misc_benCut1_colaCut1$df_summary3 %>% kable() 
 
+# check adjusted salary
+ls_eg_sfty_benCut1$df_wage %>% 
+  select(age_2018, wage_adj, wage_unadj = sx)
 
-ls_eg_sfty_benCut1$df_wage
 
 
-df <- 
+
+df_tbl_eg1 <- 
   bind_rows(
     ls_eg_sfty_benCut1$df_summary3,
     ls_eg_sfty_colaCut1$df_summary3,
@@ -1669,61 +1702,73 @@ df <-
   filter(type == "reform")
 
 
-df <- bind_rows(ls_eg_sfty_benCut1$df_summary3 %>%
-                  filter(type == "baseline"),
-                df) %>% 
+df_tbl_eg1  <- bind_rows(ls_eg_sfty_benCut1$df_summary3 %>%
+                           filter(type == "baseline"),
+                         df_tbl_eg1 ) %>% 
   select(-age55.B_init,-age65.B_init)
-df
-
-ls_eg_sfty_benCut1$df_wage %>% 
-  select(age_2018, wage_adj, wage_unadj = sx)
-
-xlsx::write.xlsx2(df, paste0(here::here(), "/analysis/outputs_analysis/tbl_examples1.xlsx"))
+df_tbl_eg1
 
 
-## check what's 
+xlsx::write.xlsx2(df_tbl_eg1, paste0(here::here(), "/analysis/outputs_analysis/tbl_examples1.xlsx"))
 
-df1 <- 
-  df_results %>% 
-  filter(sim_name %in% c("misc2t_colaCut1_lowERC", 
+
+
+df_tbl_eg1 %>% 
+  select(!contains("age35."), -type)
+  
+
+
+
+
+
+
+
+## detective work
+{
+df1 <-
+  df_results %>%
+  filter(sim_name %in% c(
+                         "misc2t_colaCut1_lowERC",
                          "misc2t_benCut1_colaCut1_lowERC",
-                         "sfty2t_colaCut1_lowERC", 
-                         "sfty2t_benCut1_colaCut1_lowERC"),
+                         "sfty2t_colaCut1_lowERC",
+                         "sfty2t_benCut1_colaCut1_lowERC",
+                         "poff2t_colaCut1_lowERC",
+                         "poff2t_benCut1_colaCut1_lowERC"),
          sim == 0,
          year <= 2043
-  ) %>% 
-  select(sim_name,year, cola_actual) 
+  ) %>%
+  select(sim_name,year, cola_actual)
 
-df1 %>% 
+df1 %>%
   spread(sim_name, cola_actual)
-  
-
-df1 <- 
-  df_results %>% 
-  filter(sim_name %in% c("misc2t_colaCut1_lowERC", 
-                         "misc2t_benCut1_colaCut1_lowERC",
-                         "sfty2t_colaCut1_lowERC", 
-                         "sfty2t_benCut1_colaCut1_lowERC"),
-         sim == 0,
-         year <= 2043
-  ) %>% 
-  select(sim_name,year, FR_MA) 
-
-df1 %>% 
-  spread(sim_name, FR_MA)
-  
-
-
- df_results %>% 
-  filter(sim_name %in% c("sfty2t_colaCut1_lowERC", 
-                         "sfty2t_benCut1_colaCut1_lowERC"),
-         sim == 0,
-         year <= 2050
-  ) %>% 
-  select(sim_name,year, var = cola_actual) %>% 
-  spread(sim_name, var) %>% 
-  as_tibble()
-
+#   
+# 
+# df1 <- 
+#   df_results %>% 
+#   filter(sim_name %in% c("misc2t_colaCut1_lowERC", 
+#                          "misc2t_benCut1_colaCut1_lowERC",
+#                          "sfty2t_colaCut1_lowERC", 
+#                          "sfty2t_benCut1_colaCut1_lowERC"),
+#          sim == 0,
+#          year <= 2043
+#   ) %>% 
+#   select(sim_name,year, FR_MA) 
+# 
+# df1 %>% 
+#   spread(sim_name, FR_MA)
+#   
+# 
+# 
+#  df_results %>% 
+#   filter(sim_name %in% c("sfty2t_colaCut1_lowERC", 
+#                          "sfty2t_benCut1_colaCut1_lowERC"),
+#          sim == 0,
+#          year <= 2050
+#   ) %>% 
+#   select(sim_name,year, var = cola_actual) %>% 
+#   spread(sim_name, var) %>% 
+#   as_tibble()
+}
 
 ```
 

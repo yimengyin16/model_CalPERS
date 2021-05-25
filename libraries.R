@@ -98,6 +98,24 @@ read_excel_range <- function(fileName, sheetName, Range = "a2:b4" ){
 
 
 
-
+theme_yy <- function(...){
+  theme_bw(...) + 
+    theme(panel.grid.major.x = element_line(size = 0.3, color = "gray90"), #element_blank(),
+          panel.grid.minor.x = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid.major.y = element_line(size = 0.5, color = "gray80"),
+          plot.title=element_text(hjust=0.5),
+          plot.subtitle=element_text(hjust=0.5),
+          plot.caption=element_text(hjust=0, size = 9),
+          
+          panel.background = element_rect(fill   = "grey98",
+                                          colour = "grey98",
+                                          size = 0.5, linetype = "solid")
+          
+    )
+  
+  
+  
+}
 
 

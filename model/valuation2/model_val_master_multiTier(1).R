@@ -135,11 +135,12 @@ pop <- get_demographics(ls_tierData)
 # Note that the function returns a list
 
 
+
 #*******************************************************************************
 #      Individual actuarial liabilities, normal costs and benenfits    ####
 #*******************************************************************************
 invisible(gc())
-source("model/valuation2/model_val_indivLiab_flexbf(2).R", local = TRUE)
+source("model/valuation2/model_val_indivLiab_flexbf(3).R", local = TRUE)
 
 indivLiab <- list()
 
@@ -236,7 +237,11 @@ if(any(str_detect(val_paramlist$tier_include, "misc"))){
 
 if(any(str_detect(val_paramlist$tier_include, "sfty"))){
   init_amort_include <- c(init_amort_include, c("sfty", "poff", "chp"))
-}
+  }
+
+if(any(str_detect(val_paramlist$tier_include, "poff"))){
+   init_amort_include <- c(init_amort_include, c("poff"))    
+  }
 
 
 init_amort_raw_val <- 
@@ -261,6 +266,7 @@ saveRDS(
   file = paste0(dir_outputs_val, "val_", val_name_run, ".rds")
 )
 }
+
 
 
 # aggLiab
@@ -313,6 +319,20 @@ saveRDS(
 # 44511484637
 
 
+# df <- readRDS(paste0(here::here(),"/model/valuation2/outputs_val/val_poff2t_bf100_cola2.rds"))
+# 
+# 
+# df$aggLiab$sumTiers$active
+# 
+# df$aggLiab$sumTiers$disbRet
+# 
+# 22396502168 + 
+# 15615394389 + 
+# 11110941320 + 
+#   649772643 + 
+#  2463615238
+# 
+# 
 
 
 

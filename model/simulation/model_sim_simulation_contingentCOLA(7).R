@@ -330,6 +330,10 @@ run_sim <- function(i.r_ = i.r,
   # use_baselineUAAL <- TRUE
   # newBasisPolicyChg <- FALSE
   
+  # calibration
+  # valData$init_amort_raw %<>% 
+  #   mutate(year.remaining = year.remaining + 1)
+  
   # Set up the matrix for SC starting from year 1
   m.max     <- max(valData$init_amort_raw$year.remaining, m) # max number of rows and columns needed
   m.max     <- max(m.max, 20)  # for amortization of amort. of policy changes

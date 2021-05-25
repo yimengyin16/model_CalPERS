@@ -52,9 +52,11 @@ add_salary_full <- function(tierData,
                             val_paramlist_    = val_paramlist
                             ){
 
-# tierData <- ls_tierData[tierName]
+# tierData <- ls_tierData$poff_classic  #ls_tierData[tierName]
 # Global_paramlist_ <- Global_paramlist
 # val_paramlist_    <- val_paramlist
+
+
 
 
 assign_parmsList(Global_paramlist_, envir = environment()) # environment() returns the local environment of the function.
@@ -112,7 +114,7 @@ salScale_full <-
   select(start_year, ea, age, year, scale_cum) %>% 
   arrange(start_year, ea, age)
 
-# salScale_full %>% filter(start_year ==2000, ea == 30)
+salScale_full %>% filter(start_year ==2019, ea == 30)
 
 
 ## Step 2. Supplement the inital salary table with all starting salary
