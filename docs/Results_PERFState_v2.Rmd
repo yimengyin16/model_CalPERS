@@ -1,0 +1,673 @@
+---
+title: "CalPERS State plan & policy options: \npreliminary results for discussion"
+output:
+  html_notebook:
+    toc: yes
+    number_sections: yes
+  word_document:
+    toc: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r loading results, include=FALSE}
+
+source(paste0(here::here(), "/libraries.R"))
+
+
+dir_sims <- "model/simulation/outputs_sim2t/"
+
+df_simNames <- 
+tribble(
+  ~simName, ~label_benPolicy,
+  "misc2t_baseline",                      "Baseline: Current policy",
+    
+  "misc2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "misc2t_benCut1_highERC",               "Reduce benefit factor by 50%",
+  
+  "misc2t_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
+  "misc2t_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+  
+  "misc2t_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "misc2t_benCut1_colaCut1_highERC",      "Combine the two above",
+  
+  "misc2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "misc2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+  
+  "misc2t_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "misc2t_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+  
+  "misc2t_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "misc2t_benCut2_colaCut2_highERC",      "Combine the two above",
+  
+  "misc2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
+  "misc2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)",
+  
+  
+  "sfty2t_baseline",                      "Baseliine: Current policy",
+
+  "sfty2t_benCut1_lowERC",                "Reduce benefit factor by 50%",
+  "sfty2t_benCut1_highERC",               "Reduce benefit factor by 50%",
+
+  "sfty2t_colaCut1_lowERC",               "No COLA until 100% funded (7%DR)",
+  "sfty2t_colaCut1_highERC",              "No COLA until 100% funded (7%DR)",
+
+  "sfty2t_benCut1_colaCut1_lowERC",       "Combine the two above",
+  "sfty2t_benCut1_colaCut1_highERC",      "Combine the two above",
+
+  "sfty2t_benCut2_lowERC",                "Reduce benefit factor by 25%",
+  "sfty2t_benCut2_highERC",               "Reduce benefit factor by 25%",
+
+  "sfty2t_colaCut2_lowERC",               "Half COLA until 100% funded (7%DR)",
+  "sfty2t_colaCut2_highERC",              "Half COLA until 100% funded (7%DR)",
+
+  "sfty2t_benCut2_colaCut2_lowERC",       "Combine the two above",
+  "sfty2t_benCut2_colaCut2_highERC",      "Combine the two above",
+
+  "sfty2t_colaCut2lowerDR_lowERC",        "Half COLA until 100% funded (5%DR)",
+  "sfty2t_colaCut2lowerDR_highERC",       "Half COLA until 100% funded (5%DR)"
+)
+
+
+# df_simNames$simName
+df_results <- 
+  map(df_simNames$simName, ~ readRDS(paste0(here::here(), "/", dir_sims, "sim_", .x, ".rds"))$results) %>% 
+  bind_rows() %>% 
+  mutate(NC.ER_PR = 100*(NC - EEC)/PR )  %>% 
+  mutate(
+         #sim_name = str_replace(sim_name, "&", "_"),
+         sim_name = factor(sim_name, levels = df_simNames$simName )
+         )
+
+
+vars_report <- c("sim_name","sim", "year", "AL", "UAAL", "FR_MA", "ERC", "ERC_PR", "NC_PR", "NC.ER_PR", "SC_PR")
+vars_table  <- c("sim_name", "year", "AL", "FR_MA", "ERC", "ERC_PR")
+
+```
+
+
+$~$
+
+
+# **Updates**
+
+## What's new 
+
+Updates since the previous 
+
+- Classic members and PEPRA members are modeled separately. 
+- Add the 5-year ramp-up period to the amortization method
+- Add analysis of the impact on member benefit (in progress)
+
+
+Updates since the memo of June 28, 2020
+
+- Added results for a new group consisting of state safety, peace officers and firefighters(POFF), and California Highway Patrol(CHP) members.
+- Added 3 new policies that involve lesser reductions in the COLA and in the benefit factor for future service
+- Added a contingent COLA policy in which COLA is determined based on funded ratio calculated using 5% discount rate.
+- Minor modeling improvements that cause numbers to change slightly from the previous memo 
+
+
+## Future updates
+We're working on the following changes for the next update.
+
+- Modeling classic members and PEPRA members separately
+- Impacts on plan members
+- Stochastic analysis
+- Various minor policy features of PERF A (e.g. amortization with ramp-up period)
+
+
+## Key conclusions {.tabset} 
+
+```{r summary, include=FALSE}
+# library(officer)
+
+df_summary_det <- 
+  df_results %>% 
+  filter(sim == 0,
+         year <= 2030) %>% 
+  select(any_of(c("year", "sim_name", "UAAL", "ERC"))) %>% 
+  filter(year %in% c(2018, 2028)) %>% 
+  mutate(UAAL = UAAL/1e9,
+         ERC = ERC/1e9) %>% 
+  gather(Var, value, -sim_name, -year) %>% 
+  mutate(Var = paste0( "y", year, "_", Var ),
+         year = NULL
+         ) %>% 
+  spread(Var, value) 
+# df_summary_det
+
+make_summaryTable <- function(df, grpName, grpName_label){
+  
+ # df <- df_summary_det
+ # grpName <- "sftyAll"
+ # grpName_label <-  "Group: State Safety, POFF, and CHP"
+  
+bind_rows(
+  (df %>% 
+    filter(str_detect(sim_name, grpName )) %>% 
+    mutate(ERCpolicy = "")
+   )[1,],
+
+  (df %>% 
+    filter(str_detect(sim_name, grpName)) %>% 
+    mutate(across(!c(sim_name), ~ 100*(.x/.x[1] - 1))) %>% 
+    mutate(ERCpolicy = str_extract(sim_name, "lowERC|highERC"))
+    )[-1,]
+  ) %>%
+  as_tibble() %>% 
+  mutate(ERCpolicy = factor(ERCpolicy, 
+                            levels = c("", "lowERC", "highERC"),
+                            labels = c("", "Low ERC", "High ERC")
+                            
+                            )) %>% 
+  arrange(ERCpolicy) %>% 
+  relocate(ERCpolicy) %>% 
+  mutate(sim_name = factor(sim_name, 
+                           levels = df_simNames$simName, 
+                           labels = df_simNames$label_benPolicy)
+         ) %>% 
+  flextable() %>% 
+  
+  # Global settings
+   hrule(rule = "exact", part = "all") %>%
+  
+  # Header
+   add_header_row(values = c("", 
+                            "2018",
+                            "2028"),
+                 colwidths = c(2,2,2)) %>%
+  
+   theme_booktabs() %>% 
+   add_header_lines(values = "Amounts in $ billions for baseline (row 1); % change relative to baseline for other policies" ) %>%
+   add_header_lines(values = "Assumes investment returns of 7% every year (based on CalPERS assumptions)" ) %>%
+   add_header_lines(values = grpName_label) %>%  
+   add_header_lines(values = "Estimated impacts of selected policy alternatives" ) %>%
+   
+   align(align = "center", part = "header")  %>%
+   height(part = "header",   height = .5, i = 1) %>% 
+   height(part = "header",   height = .5, i = 5:6) %>% 
+   fontsize(size = 12, part = "header") %>%
+   fontsize(size = 18, part = "header", i = 1) %>% 
+   fontsize(size = 16, part = "header", i = 2) %>% 
+   
+   set_header_labels(values =
+                      list(
+                      ERCpolicy  = "",
+										  sim_name   = "policy scenario",
+										  y2018_ERC  = "Employer\ncontribution",
+										  y2028_ERC  = "Employer\ncontribution", 
+										  y2018_UAAL = "UAAL",
+										  y2028_UAAL = "UAAL"
+										  )
+										) %>% 
+  
+   # Body
+   fontsize(size = 12, part = "body") %>% 
+   width(j = 1,   width = 0.6)   %>%
+   width(j = 2,   width = 3)   %>%
+   width(j = 3:6, width = 1.2) %>%
+   height(part = "body",   height = .5) %>%
+  
+   colformat_num(i = c(1), j = 3:6,    digits = 1, prefix = "$") %>% 
+   colformat_num(i = c(2:15), j = 3:6, digits = 1, suffix = "%") %>% 
+   
+   hline(part = "body", i = c(1, 8), border = officer::fp_border(color="gray40", width = 1.5)) %>% 
+   hline(part = "body", i = c(4, 11), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
+   # vline(part = "body", j = c(4), border = officer::fp_border(color="gray40", style = "dotted"))
+   merge_v( j = "ERCpolicy") %>% 
+   
+  # Footer
+  add_footer_lines(values = "Notes:") %>% 
+  add_footer_lines(values = "Low ERC: Employer contributions are reduced to reflect lower actuarially determined contributions (ADC)") %>% 
+  add_footer_lines(values = "High ERC: Employer contributions are approximately maintained despite drop in ADC") %>% 
+  height(part = "footer",   height = .5) %>% 
+  fontsize(size = 12, part = "footer") 
+}  
+      
+#make_summaryTable(df_summary_det, "miscAll", "Group: State Misc and Industrial")
+#make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP")
+
+```
+
+
+### State Misc, 7% return 
+
+```{r, echo=FALSE}
+make_summaryTable(df_summary_det, "misc2t", "Group: State Misc and Industrial")
+```
+
+### State safety, 7% return 
+
+```{r, echo = FALSE}
+make_summaryTable(df_summary_det, "sfty2t", "Group: State Safety, POFF, and CHP")
+```
+
+
+$~$
+
+
+# **Overview**
+
+We present below early results of our analysis for CalPERS state members of PERF A. 
+
+
+## Types of members
+There are five types of state members in PERF A and currently we categorize and model them as two groups based on the similarity of benefit policies and member characteristics:
+
+- **Group 1**: State miscellaneous and state industrial members. 
+- **Group 2**: State safety members, state peace officers/firefighters (POFF), and California Highway Patrol (CHP)
+
+(TODO: We are going to distinguish classic and PEPRA members in each group in the next iteration)
+
+See appendix for a diagram that summarizes the types of state members of PERF A. 
+
+
+## Policy scenarios
+We have modeled each group under current policy and under three types of alternative policies, each with several variants differing in the degree that benefits are affected:
+
+1. Benefit factor reduction: For all future years of service for all active employees, an x% reduction in the “benefit factor.” (The benefit factor is multiplied by a plan member’s final salary and years of service to determine the initial retirement benefit.) This is far more aggressive than the policies that have been tested in “California Rule” litigation, which have
+focused on much narrower scaling back of future benefits (e.g., disallowing “air time”). Variants:
+  
+    - 50% reduction to benefit factor.
+    - 25% reduction to benefit factor.
+    - (Example: If the original benefit factor is 3%, it will become 2.25% after a 25% reduction )
+
+2. COLA suspension: The COLA/escalator is suspended or reduced until the plan's funded ratio reaches a certain level. Variants:
+
+    - COLA is fully suspended until the plan is fully funded under the plan chosen actuarial discount rate (7%).
+    - COLA is reduced from 2% to 1% per year until the plan is fully funded under the plan chosen actuarial discount rate (7%).
+    - COLA is reduced from 2% to 1% per year until the plan is fully funded under a more conservative discount rate (5%). (Similar to the Rhode Island plan) 
+    
+
+3. Both policies combined: The benefit factor is reduced and the COLA is
+suspended/reduced. Variants:
+
+    - 50% benefit factor reduction + full COLA suspension until full funding (7% discount rate)
+    - 25% benefit factor reduction + COLA reduced to half (1%) until full funding (7% discount rate)  
+
+We assume all policies go fully into effect in the first year. The benefit factor reduction affects future
+service of current workers and all service of new hires. The COLA suspension affects all current retirees,
+all current workers, and all new hires.
+
+
+The policies with greater benefit reductions help define bounds, and the policies with lesser benefit reductions are closer to what might be practical for policymakers. 
+
+Additional variants that we may explore in the future: (1) providing lesser reductions for older retirees or workers who are close to retirement, (2) apply only to new hires. These variants would provide lower fiscal savings and greater protection to plan
+members.
+
+## Assumptions on how CA governments would respond 
+We examined these policies under two assumptions about how California governments would respond:
+
+1. Assumption A: Take the savings now, in lower contributions: All policies reduce actuarial
+liability, unfunded liability, and normal cost. Lower normal cost and amortization cost reduce
+the actuarially determined contribution (ADC). Under this assumption employers pay just the ADC,
+which would be lower than what they pay now.
+
+2. Assumption B: Maintain employer contributions despite the ADC reduction: Even though the ADC is
+lower, employers pay the ADC plus an additional contribution to keep their payments near
+where they were before, reducing unfunded liability more quickly than otherwise. However, this
+can interact with the contingent COLA: if full funding is reached sooner, then benefit payments
+will go up as the COLA is put back into effect.
+
+
+## Investment return scenarios
+In the tables below we show results for 2018 (the actuarial valuation year and our first year) and for
+2028. The model goes out much further in time and it can be useful to pay attention to later time
+periods as well to gain a better understanding of investment risks and amortization policies.
+We have examined these policies and variants under three investment scenarios:
+
+1. Deterministic: 7% investment return assumption achieved every year. This is the CalPERS
+assumption, save for any planned earnings assumption reductions.
+
+2. Deterministic asset shock: This is based loosely on stress-test scenarios used by Pew, which in
+turn are based loosely on Dodd-Frank assumptions. We assume 7% return in 2018, 2% in 2019,
+negative 24% in 2020, then 3 years of 12% (2021-2023), then 7% annually thereafter.
+
+3. Stochastic: 7% expected mean return, 12% standard deviation: This allows us to see how the
+policies, particularly the contingent COLA policy, interact with investment return volatility.
+The tables below provide summary results for the deterministic scenarios. We will add tables for the
+stochastic return scenario in a later iteration.
+
+
+# **Preliminary results**
+
+```{r funSummaryDetail, echo=FALSE}
+# library(officer)
+
+# select group names:
+
+
+make_summaryTable_detailed <- function(grpName, sim_select){
+
+# sim_select <- 0
+# grpName <- "misc2t"
+grpName_label <- switch (grpName,
+                         miscAll = "Group: State misc and industrial",
+                         sftyAll = "Group: State safety, POFF, and CHP",
+                         misc2t = "Group: State misc and industrial",
+                         sfty2t = "Group: State safety, POFF, and CHP")
+
+return_label <- switch (as.character(sim_select),
+  "0"  = "Assumes investment returns of 7% every year (based on CalPERS assumptions)",
+  "-2" = "Asset shock: 7% in 2018, 2% in 2019, minus 24% in 2020, then 3 years of 12% (2021-2023), then 7% annually"
+)
+
+
+ 
+
+ df <- 
+  df_results %>% 
+  filter(sim == sim_select,
+        year %in% c(2018, 2028)) %>% 
+  mutate(AL   = AL/1e9,
+         UAAL = UAAL/1e9,
+         ERC  = ERC/1e9) %>% 
+  select(year, sim_name, v1_AL = AL, v2_UAAL = UAAL, v3_ERC = ERC, v4_FR_MA = FR_MA, v5_ERC_PR = ERC_PR) %>% 
+
+  gather(Var, value, -sim_name, -year) %>% 
+  mutate(Var = paste0( "y", year, "_", Var ),
+         year = NULL
+         ) %>% 
+  spread(Var, value) 
+# df_summary_det
+
+# make_summaryTable <- function(df, grpName, grpName_label){
+  
+
+
+    
+bind_rows(
+  (df %>% 
+    filter(str_detect(sim_name, grpName)) %>% 
+    mutate(ERCpolicy = "")
+   )[1,],
+
+  (df %>% 
+    filter(str_detect(sim_name, grpName)) %>% 
+    mutate(across(!contains(c("ERC_PR", "FR_MA", "sim_name")) , ~ 100*(.x/.x[1] - 1))) %>% 
+    mutate(across(contains(c("ERC_PR", "FR_MA")) , ~ .x - .x[1])) %>% 
+    mutate(ERCpolicy = str_extract(sim_name, "lowERC|highERC"))
+    )[-1,]
+  ) %>%
+  as_tibble() %>% 
+  mutate(ERCpolicy = factor(ERCpolicy, 
+                            levels = c("", "lowERC", "highERC"),
+                            labels = c("", "Low ERC", "High ERC")
+                            
+                            )) %>% 
+  arrange(ERCpolicy) %>% 
+  relocate(ERCpolicy) %>% 
+  mutate(sim_name = factor(sim_name, 
+                           levels = df_simNames$simName, 
+                           labels = df_simNames$label_benPolicy)
+         ) %>% 
+  flextable() %>% 
+  
+  # Global settings
+   hrule(rule = "exact", part = "all") %>%
+  
+  # Header
+   add_header_row(values = c("", 
+                            "2018",
+                            "2028"),
+                 colwidths = c(2,5,5)) %>%
+  
+   theme_booktabs() %>% 
+   # add_header_lines(values = "(Amounts in $ billions)" ) %>%
+   add_header_lines(values = return_label) %>%
+   add_header_lines(values = grpName_label) %>%  
+   add_header_lines(values = "Estimated impacts of selected policy alternatives" ) %>%
+   
+   align(align = "center", part = "header")  %>%
+   height(part = "header",   height = .5, i = 1) %>% 
+   height(part = "header",   height = .5, i = 4:5) %>% 
+   fontsize(size = 12, part = "header") %>%
+   fontsize(size = 18, part = "header", i = 1) %>% 
+   fontsize(size = 16, part = "header", i = 2) %>% 
+   fontsize(size = 14, part = "header", i = 3) %>% 
+   set_header_labels(values =
+                      list(
+                      ERCpolicy  = "",
+										  sim_name   = "policy scenario",
+										  
+										  y2018_v1_AL  = "Actuarial\nLiability",
+										  y2028_v1_AL  = "Actuarial\nLiability",
+										  
+										  y2018_v2_UAAL  = "UAAL",
+										  y2028_v2_UAAL  = "UAAL",
+										  
+										  y2018_v3_ERC  = "Employer\ncontribution\n(ERC)",
+										  y2028_v3_ERC  = "Employer\ncontribution\n(ERC)", 
+										  
+										  y2018_v4_FR_MA  = "Funded ratio\n(MVA basis)",
+										  y2028_v4_FR_MA  = "Funded ratio\n(MVA basis)", 
+										  
+										  y2018_v5_ERC_PR  = "ERC as\n% of payroll",
+										  y2028_v5_ERC_PR  = "ERC as\n% of payroll"
+										  )
+										) %>% 
+  
+   # Body
+   fontsize(size = 12, part = "body") %>% 
+   width(j = 1,   width = 0.6)   %>%
+   width(j = 2,   width = 3.5)   %>%
+   width(j = 3:12, width = 1.1) %>%
+   height(part = "body",   height = .5) %>%
+  
+   colformat_num(i = c(1), j = c(3:5, 8:10),    digits = 1, prefix = "$") %>%
+   colformat_num(i = c(1), j = c(6:7, 11:12),    digits = 1, suffix = "%") %>%
+   colformat_num(i = c(2:15), j = 3:12, digits = 1, suffix = "%") %>% 
+   
+   hline(part = "body", i = c(1, 8), border = officer::fp_border(color="gray40", width = 1.5)) %>% 
+   hline(part = "body", i = c(4, 11), border = officer::fp_border(color="gray40", style = "dotted")) %>%  
+   vline(part = "all", j = c(7), border = officer::fp_border(color="gray40", style = "dotted")) %>% 
+   merge_v( j = "ERCpolicy") %>% 
+   
+  # Footer
+  add_footer_lines(values = "Notes:") %>% 
+  add_footer_lines(values = "Low ERC: Employer contributions are reduced to reflect lower actuarially determined contributions (ADC)") %>% 
+  add_footer_lines(values = "High ERC: Employer contributions are approximately maintained despite drop in ADC") %>% 
+  add_footer_lines(values = "Baseline: Liability, UAAL and ERC in $billions") %>% 
+  add_footer_lines(values = "Alternative policies: Values are changes relative to baseline. Liability, UAAL and ERC are % changes; funded ratio and ERC rate are absolute changes (alternative minus baseline)") %>% 
+  height(part = "footer",   height = .5) %>% 
+  fontsize(size = 12, part = "footer") 
+}  
+      
+#make_summaryTable(df_summary_det, "miscAll", "Group: State Misc and Industrial")
+#make_summaryTable(df_summary_det, "sftyAll", "Group: State Safety, POFF, and CHP")
+
+```
+
+
+## Deterministic results, with 7% annual returns {.tabset}
+
+### State misc
+```{r echo=FALSE}
+make_summaryTable_detailed("misc2t", 0)
+```
+
+### State safety 
+```{r echo=FALSE}
+make_summaryTable_detailed("sfty2t", 0)
+```
+
+
+
+
+## Asset shock scenario (24% decline in portfolio) {.tabset}
+
+### State misc
+```{r echo=FALSE}
+make_summaryTable_detailed("misc2t", -2)
+```
+
+### State safety 
+```{r echo=FALSE}
+make_summaryTable_detailed("sfty2t", -2)
+```
+
+
+```{r, eval = FALSE, include=FALSE}
+
+file.copy(paste0(here::here(),"/analysis/Results_PERFState_v2.nb.html"), paste0(here::here(), "/docs/Results_PERFState_v2.nb.html"), overwrite = TRUE)
+
+```
+
+
+$~$
+
+## Impact on member benefit
+
+Cohorts to examine
+
+- retirees who retire in year 1
+- classic member age 50 + entry age 25, assuming retirement age of 55 
+- classic member age 40 + engry age 25, assuming retirement age of 55
+
+What to compare
+
+- Plotting annual benefit: age 55 to 85
+- PV benefit over age 55 to 85, dr = 0.7, valuated at age 55
+
+scenario:
+
+- assumption met
+- asset shock 
+
+
+
+
+```{r echo=FALSE}
+
+
+dir_outputs_val <- "model/valuation2/outputs_val/"
+
+
+df_val <- readRDS(paste0(dir_outputs_val, "val_misc2t_bf100_cola2.rds"))
+
+
+df_val$indivLiab$misc_classic$active %>% 
+  names
+
+
+
+```
+
+
+
+
+$~$
+
+
+# **Appendix**
+
+![](C:/Git/Proj_CAPlans/model_CalPERS/analysis/PlanInfo.png)
+
+
+```{r sftyAll_det_lowERC, eval=FALSE, include=FALSE}
+#library(officer)
+
+df_sftyAll_det_lowERC <- 
+  df_results %>% 
+  filter(sim == 0,
+         year <= 2030,
+         str_detect(sim_name, "sftyAll"),
+         str_detect(sim_name, "baseline|lowERC")
+         )
+
+
+tab_sftyAll_det_lowERC <- 
+df_sftyAll_det_lowERC %>% 
+  select(any_of(vars_table)) %>% 
+  filter(year %in% c(2018, 2028)) %>% 
+  mutate(AL = AL/1e9,
+         ERC = ERC/1e9) %>% 
+  gather(Var, value, -sim_name, -year) %>% 
+  mutate(Var = factor(Var, levels = c("AL", "ERC", "FR_MA",  "ERC_PR"),
+                           labels = c("Actuarial liability", 
+                                      "Employer contribution(ERC)",
+                                      "Funded ratio, \nMV basis",
+                                      "ERC as % of payroll")      
+                      
+                      )) %>% 
+  spread(sim_name, value) %>% 
+  arrange(year) %>% 
+  flextable() %>% 
+  add_header_row(values = c("", 
+                            "Policies with greater \nbenefit/COLA reduction", 
+                            "Policies with lesser \nbenefit/COLA reduction"), 
+                 colwidths = c(3,3,3 )) %>% 
+  theme_booktabs() %>% 
+  add_header_row(values = "Assumes investment returns of 7% every year (based on CalPERS assumptions) \nAssumption A: Reduce employer contribution to reflect new lower actuarially determined contribution", 
+								 colwidths = 9) %>% 
+  add_header_row(values = "Group: State safety, POFF, and CHP", 
+								 colwidths = 9) %>%
+  
+  add_header_row(values = "Estimated impacts of selected policy alternatives on CalPERS PERF A, simplified assumptions", 
+								 colwidths = 9) %>% 
+  add_footer_row(values = "Amounts are in $ billions", 
+								 colwidths = 9) %>% 
+ 
+  height(part = "body",   height = .6) %>%
+	height(part = "header", i = 1:2, height = .4) %>%
+	height(part = "header", i = 3, height   = .6) %>%
+  height(part = "header", i = 4, height = .9) %>%
+  height(part = "header", i = 5, height = .9) %>%
+  hrule(rule = "exact", part = "all") %>%
+  width(j = 1, width = 0.6) %>%
+  width(j = 2, width = 0.4) %>%
+	width(j = 3:9, width = 1.6) %>%
+  fontsize(size = 18, part = "header", i = 1:2) %>% 
+  fontsize(size = 15, part = "header", i = 3) %>% 
+  fontsize(size = 14, part = "header", i = 4:5) %>% 
+  fontsize(size = 14, part = "footer", i = 1) %>% 
+  fontsize(size = 14, part = "body", j = 1:9) %>% 
+	# autofit(add_w = 1) %>% 
+	align(j = 1, align = "center", part = "all")  %>%
+  #align(j = 2, align = "center", part = "body")  %>%
+  align(i = 4, align = "center", part = "header")  %>%
+  align(i = 5, align = "right", part = "header")  %>%
+  align(i = 1, align = "left", part = "footer")  %>%
+  merge_v( j = "year") %>% 
+  colformat_num(i = c(1,2,5,6), j = 3:9, digits = 1, prefix = "$") %>% 
+  colformat_num(i = c(3,4,7,8), j = 3:9, digits = 1, suffix = "%") %>% 
+  set_header_labels(values =
+                      list(
+                      year = "Year",
+										  Var  = "Variable",
+										  sftyAll_baseline        = "Baseline \ncurrent policy",
+                      sftyAll_benCut1_lowERC  = "Reduce \nbenefit factor \nby 50%",
+										  sftyAll_colaCut1_lowERC = "No COLA until 100% funded (7% discount)",
+                      sftyAll_benCut1_colaCut1_lowERC = "Both policies(left) \ncombined",
+                      sftyAll_benCut2_lowERC  = "Reduce \nbenefit factor \nby 25%",
+										  sftyAll_colaCut2_lowERC = "Half COLA until 100% funded (7% discount)",
+										  sftyAll_benCut2_colaCut2_lowERC = "Both policies(left) \ncombined"
+										  )
+  ) %>% 
+  hline(part = "body", i = 4, border = officer::fp_border(color="gray40") ) %>% 
+  #hline_bottom(part = "body", border = fp_border(color="gray40") ) %>% 
+  vline(part = "all", j = c(3,6),  border = officer::fp_border(color="gray80") )
+  
+ 
+tab_sftyAll_det_lowERC 
+
+# ![](C:/Git/Proj_CAPlans/model_CalPERS/analysis/PlanInfo.png)
+# ![](https://app.lucidchart.com/publicSegments/view/be8af79b-9988-4194-9744-da60cb0a45d5/image.png)
+```
+
+
+
+
+```{r eval=FALSE, include=FALSE}
+
+
+
+
+
+
+```
+
+
+
+
