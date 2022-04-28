@@ -1,11 +1,10 @@
 # Notes:
-## - For the branch "dev_gains" 
-
+## - For the branch "hands_on" 
 
 
 # 0. Packages and functions ----
 source("libraries.R")
-source("functions.R")
+#source("functions.R")
 
 
 # 1. Preparing inputs ----
@@ -31,25 +30,24 @@ source("model/tiers/Tier_sfty_classic.R")
 source("model/tiers/Tier_sfty_pepra.R")
 
 ## POFF only (not essential, just for an example in the final report)
-source("model/tiers/Tier_poff_classic.R")
-source("model/tiers/Tier_poff_pepra.R")
+#source("model/tiers/Tier_poff_classic.R")
+#source("model/tiers/Tier_poff_pepra.R")
 
 
 # 3. Actuarial valuation ----
 ## Note:
-##  - The lastest version is in the folder "/valuation2", which should replace "/valuation"
-##    when finalizing the program. 
-##  - You will see multiple versions for some files, only the latest versions are
+##  - The latest version is in the folder "/valuation2".
+##  - You may see multiple versions for some files, only the latest versions are
 ##    are used. (e.g. version (3) for "model_val_indivLiab_flexbf")
 
 ## - You can control which valuations to run by changing the "include" column of in the 
 ##   "param_val" tab of "/model/RunControl.xlsx". It may take a long time to run all valuations (rows). 
-##   For a text run, you can only run the valuations needed in the simulations you want to run. 
+##   For a test run, you can only run the valuations needed in the simulations you want to run. 
 
 ##   You can choose which simulations to run in the "param_sim" tab by changing the "include" column, 
 ##   and the valuation needed is specified in the "val_name" column. 
 
-##   For example, if you only need to run the simulation "misc25_baseline", then
+##   For example, if you only need to run the simulation "misc2t_baseline", then
 ##   only the valuation "misc2t_bf100_cola2" is needed. 
 
 source("model/valuation2/model_val_runControl.R")
@@ -74,7 +72,7 @@ source("model/simulation/model_sim_runControl.R")
 
 # I suggest running the rmd file chunk by chunk.
 
-# We have made the notebook an webpage using "Github Pages" for easier sharing. 
+# We have made the notebook a webpage using "Github Pages" for easier sharing. 
 # Here is the link: 
 # https://yimengyin16.github.io/model_CalPERS/Results_PERFState.nb.html
 

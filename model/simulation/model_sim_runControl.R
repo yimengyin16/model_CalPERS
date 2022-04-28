@@ -4,7 +4,7 @@
 # Valuation name
 rm(list = ls())
 
-source("libraries.R")
+source("libraries.R") # need to run this gain to run "run_all" in the root dir. 
 
 #*******************************************************************************
 #                           ### Valuation parameters ####                      

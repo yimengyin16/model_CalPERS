@@ -30,7 +30,7 @@ library(knitr)
 options(dplyr.print_min = 100) # default is 10
 options(dplyr.print_max = 100) # default is 20
 
-source(paste0(here::here(),"/Functions.R"))
+source(paste0(here::here(),"/functions.R"))
 
 
 #*********************************************

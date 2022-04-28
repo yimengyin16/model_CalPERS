@@ -38,8 +38,8 @@ get_demographics <- function(ls_tierData_,
 
 
 # ls_tierData_        <- ls_tierData
-# Global_paramlist_ <- Global_paramlist
-# val_paramlist_    <- val_paramlist
+# Global_paramlist_   <- Global_paramlist
+# val_paramlist_      <- val_paramlist
 
 newEnt_byTier <- c(0, 1) # for now only allow for new entrants in the second tier. 
 names(newEnt_byTier) <- names(ls_tierData_)  
@@ -391,10 +391,8 @@ calc_entrants_allTiers <- function(newEnt_byTier_,
   # growth rate.
   #
   # inputs:
-  #   wf0: a matrix of workforce before decrement. Typically a slice from wf_active
-  #   wf1: a matrix of workforce after  decrement.
   #   delta: growth rate of workforce
-  #   newEnt_byTier: named vector, proportion of new entrants entering each tier. names must be "t4a", "t4b", "t6"
+  #   newEnt_byTier: named vector, proportion of new entrants entering each tier.
   #
   # returns:
   #   a matrix with the same dimension of wf0 and wf1, with the number of new entrants in the corresponding cells,

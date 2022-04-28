@@ -128,8 +128,8 @@ for (tierName in names(ls_tierData)){
 #                            Demographics                                   ####
 #*******************************************************************************
 invisible(gc())
-# source("model/valuation/model_val_demographics_singleTier.R", local = TRUE)
-source("model/valuation2/model_val_demographics_multiTier(1).R", local = TRUE)
+#source("model/valuation2/model_val_demographics_multiTier(1).R", local = TRUE)
+source("model/valuation2/model_val_demographics_multiTier(2).R", local = TRUE)
 
 pop <- get_demographics(ls_tierData)
 # Note that the function returns a list
@@ -268,71 +268,6 @@ saveRDS(
 }
 
 
-
-# aggLiab
-
-# ls_miscAll <- readRDS("model/valuation/outputs_val/val_miscAll_bf100_cola2.rds")
-# ls_sftyAll <- readRDS("model/valuation/outputs_val/val_sftyAll_bf100_cola2.rds")
-# 
-# 
-# ls_mix <- readRDS("model/valuation2/outputs_val/val_mix_bf100_cola2.rds")
-# 
-# 
-# 
-# x <- names(ls_miscAll$aggLiab$miscAll)[2]
-# ls_miscAll$aggLiab$miscAll[[x]] - ls_mix$aggLiab$miscAll[[x]]
-# 
-# 
-# x <- names(ls_sftyAll$aggLiab$sftyAll)[5]
-# 100 * (ls_sftyAll$aggLiab$sftyAll[[x]] - ls_mix$aggLiab$sftyAll[[x]])/ls_sftyAll$aggLiab$sftyAll[[x]]
-
-# 
-# ls2 <- readRDS("model/valuation2/outputs_val/val_sfty2t_bf100_cola2.rds")
-# 
-# ls2$aggLiab$sfty_classic$servRet.la
-# ls2$aggLiab$sfty_classic$active
-# 
-# ls2$aggLiab$sfty_classic$servRet.la
-# ls2$aggLiab$sfty_pepra$servRet.la
-# 
-# 
-# ls2$aggLiab$sumTiers$active
-# ls2$aggLiab$sumTiers$servRet.la
-# ls2$aggLiab$sumTiers$disbRet
-# 
-# 44511484637
-# 
-# 
-# 
-# ls <- readRDS("model/valuation2/outputs_val/val_misc2t_bf100_cola2.rds")
-# 
-# ls$aggLiab$misc_classic$servRet.la
-# ls$aggLiab$misc_classic$active
-# 
-# ls$aggLiab$misc_classic$servRet.la
-# ls$aggLiab$misc_pepra$servRet.la
-# 
-# 
-# ls$aggLiab$sumTiers$active
-# ls$aggLiab$sumTiers$servRet.la
-# 
-# 44511484637
-
-
-# df <- readRDS(paste0(here::here(),"/model/valuation2/outputs_val/val_poff2t_bf100_cola2.rds"))
-# 
-# 
-# df$aggLiab$sumTiers$active
-# 
-# df$aggLiab$sumTiers$disbRet
-# 
-# 22396502168 + 
-# 15615394389 + 
-# 11110941320 + 
-#   649772643 + 
-#  2463615238
-# 
-# 
 
 
 
