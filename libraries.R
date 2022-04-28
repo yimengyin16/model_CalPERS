@@ -20,7 +20,8 @@ library(scales)
 # parallel computing
 library(foreach)
 library(doParallel)
-library(microbenchmark)
+
+#library(microbenchmark)
 
 # Tydiverse and other RStudio packages
 library(tidyverse) # loads ggplot2, tibble, tidyr, readr, purrr, dplyr, forcats
