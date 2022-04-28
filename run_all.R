@@ -1,6 +1,9 @@
 # Notes:
 ## - For the branch "hands_on" 
 
+# Diagram of model structure:
+# https://lucid.app/lucidchart/4d18e9cd-0d4a-405a-beb3-2b7ce85d18ba/edit?invitationId=inv_240cf457-1364-4bce-8957-4bc59f388147&page=Akz7XsUkFJH2#
+
 
 # 0. Packages and functions ----
 source("libraries.R")

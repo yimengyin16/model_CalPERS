@@ -44,4 +44,10 @@ model*/**/*.rds
 
 analysis*/**/*.html
 
+inputs/data_proc/*
+model/valuation2/outputs_val/*
+model/tiers/tierData/*
+model/simulation/outputs_sim2t/*
+
+
 ~$*
